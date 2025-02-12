@@ -1,2 +1,2 @@
-# notifications
-This is a prototype project creating a notifications system based on AWS SNS
+# notifications_ui
+This is the UI repo for a prototype notifications system build on AWS SNS
