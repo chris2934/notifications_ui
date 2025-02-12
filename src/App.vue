@@ -1,47 +1,55 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
+  <div id="app">
+    <header>
+      <h1>AWS SNS Notification System</h1>
+    </header>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+    <main>
+      <NotificationInput @sendNotification="sendNotification" />
+      <NotificationList :notifications="notifications" />
+    </main>
+  </div>
 </template>
 
-<style scoped>
+<script>
+import NotificationInput from './components/NotificationInput.vue';
+import NotificationList from './components/NotificationList.vue';
+import NotificationService from './services/NotificationService.js';
+
+export default {
+  name: 'App',
+  components: { NotificationInput, NotificationList },
+  data() {
+    return {
+      notifications: [], // Keeps track of received notifications
+    };
+  },
+  methods: {
+    // Call backend via NotificationService to send a message
+    async sendNotification(message) {
+      try {
+        await NotificationService.sendNotification(message);
+        alert('Notification sent successfully!');
+      } catch (error) {
+        console.error('Failed to send notification', error);
+        alert('Failed to send notification.');
+      }
+    },
+  },
+  async created() {
+    // Mock functionality: Fetch initial notifications (if stored in backend)
+    this.notifications = await NotificationService.getNotifications();
+  },
+};
+</script>
+
+<style>
 header {
-  line-height: 1.5;
+  text-align: center;
+  margin-bottom: 2rem;
 }
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
+main {
+  width: 80%;
+  margin: 0 auto;
 }
 </style>
