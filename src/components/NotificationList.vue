@@ -34,5 +34,6 @@ export default {
   padding: 0.5rem;
   background: #f5f5f5;
   border-radius: 5px;
+  color:black;
 }
 </style>
