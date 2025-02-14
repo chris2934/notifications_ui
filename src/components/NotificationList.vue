@@ -2,8 +2,8 @@
   <div class="notification-list">
     <h2>Notifications</h2>
     <ul>
-      <li v-for="(notification, index) in notifications" :key="index">
-        {{ notification }}
+      <li v-for="notification in sortedNotifications" :key="notification.MessageId">
+        {{ notification.MessageBody }}
       </li>
     </ul>
   </div>
@@ -18,6 +18,15 @@ export default {
       required: true,
     },
   },
+  computed: {
+    sortedNotifications() {
+      // Sort notifications by ReceivedAt in descending or ascending order
+      return [...this.notifications].sort(
+          (a, b) => new Date(b.ReceivedAt) - new Date(a.ReceivedAt) // Descending: Newest first
+      );
+    },
+
+  }
 };
 </script>
 

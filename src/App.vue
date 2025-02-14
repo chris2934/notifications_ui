@@ -5,8 +5,8 @@
     </header>
 
     <main>
-      <NotificationInput @sendNotification="sendNotification" />
-      <NotificationList :notifications="notifications" />
+      <NotificationInput @sendNotification="sendNotification"/>
+      <NotificationList :notifications="notifications"/>
     </main>
   </div>
 </template>
@@ -18,7 +18,7 @@ import NotificationService from './services/NotificationService.js';
 
 export default {
   name: 'App',
-  components: { NotificationInput, NotificationList },
+  components: {NotificationInput, NotificationList},
   data() {
     return {
       notifications: [], // Keeps track of received notifications
@@ -36,9 +36,12 @@ export default {
       }
     },
   },
-  async created() {
-    // Mock functionality: Fetch initial notifications (if stored in backend)
-    this.notifications = await NotificationService.getNotifications();
+  created() {
+    NotificationService.getNotifications().then((messages) => {
+      this.notifications = messages;
+    }).catch((error) => {
+      console.error('Failed to fetch notifications', error);
+    });
   },
 };
 </script>
@@ -48,6 +51,7 @@ header {
   text-align: center;
   margin-bottom: 2rem;
 }
+
 main {
   width: 80%;
   margin: 0 auto;
