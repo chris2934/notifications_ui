@@ -16,9 +16,6 @@
           <span class="timestamp">
             {{ formatTime(message.MessageBody.timestamp) }}
           </span>
-          <span :class="['status', message.MessageBody.status.toLowerCase()]">
-            {{ message.MessageBody.status }}
-          </span>
         </div>
       </div>
     </div>
