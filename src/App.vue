@@ -1,59 +1,18 @@
+<script setup>
+import MessagingComponent from './components/NotificationInput.vue'
+</script>
+
 <template>
   <div id="app">
-    <header>
-      <h1>AWS SNS Notification System</h1>
-    </header>
-
-    <main>
-      <NotificationInput @sendNotification="sendNotification"/>
-      <NotificationList :notifications="notifications"/>
-    </main>
+    <h2>Notifications</h2>
+    <MessagingComponent />
   </div>
 </template>
 
-<script>
-import NotificationInput from './components/NotificationInput.vue';
-import NotificationList from './components/NotificationList.vue';
-import NotificationService from './services/NotificationService.js';
-
-export default {
-  name: 'App',
-  components: {NotificationInput, NotificationList},
-  data() {
-    return {
-      notifications: [], // Keeps track of received notifications
-    };
-  },
-  methods: {
-    // Call backend via NotificationService to send a message
-    async sendNotification(message) {
-      try {
-        await NotificationService.sendNotification(message);
-        alert('Notification sent successfully!');
-      } catch (error) {
-        console.error('Failed to send notification', error);
-        alert('Failed to send notification.');
-      }
-    },
-  },
-  created() {
-    NotificationService.getNotifications().then((messages) => {
-      this.notifications = messages;
-    }).catch((error) => {
-      console.error('Failed to fetch notifications', error);
-    });
-  },
-};
-</script>
-
-<style>
-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-main {
-  width: 80%;
+<style scoped>
+#app {
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 20px;
 }
 </style>

@@ -9,12 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-amplify/api-graphql": "^4.7.5",
+    "@aws-amplify/ui-vue": "^4.2.29",
+    "aws-amplify": "^6.13.2",
     "axios": "^1.7.9",
+    "graphql": "^16.10.0",
+    "graphql-tag": "^2.12.6",
     "vue": "^3.5.13"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",
-    "vite": "^6.0.11",
+    "vite": "^6.2.0",
     "vite-plugin-vue-devtools": "^7.7.1"
   }
 }
