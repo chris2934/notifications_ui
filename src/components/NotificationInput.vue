@@ -1,45 +1,21 @@
 <template>
   <div class="messaging-container">
-    <div class="message-list">
-      <div v-if="loading" class="loading">Loading messages...</div>
-      <div v-else-if="!messages.length" class="no-messages">No messages yet</div>
-      <div
-          v-else
-          v-for="message in messages"
-          :key="message.MessageId"
-          class="message-item"
-      >
-        <div class="message-content">
-          {{ message.MessageBody.content }}
-        </div>
-        <div class="message-meta">
-          <span class="timestamp">
-            {{ formatTime(message.MessageBody.timestamp) }}
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <form ref="form" class="message-input" @submit.prevent="handleSubmit">
-      <input
-          v-model="newMessage"
-          @keyup.enter="handleSubmit"
-          placeholder="Type a message..."
-          :disabled="sending"
-      />
-      <button
-          type="submit"
-          :disabled="!newMessage.trim() || sending"
-      >
-        {{ sending ? 'Sending...' : 'Send' }}
-      </button>
-    </form>
+    <MessageList
+        :messages="messages"
+        :loading="loading"
+    />
+    <MessageInput
+        :sending="sending"
+        @send="sendMessage"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { generateClient } from 'aws-amplify/api'
+import MessageList from './MessageList.vue'
+import MessageInput from './MessageInput.vue'
 
 const messages = ref([])
 const newMessage = ref('')
@@ -62,13 +38,11 @@ const formatTime = (timestamp) => {
   }
 }
 
-const sendMessage = async () => {
-  if (!newMessage.value.trim()) return
-
+const sendMessage = async (content) => {
   try {
     sending.value = true
     const messageInput = {
-      content: newMessage.value.trim(),
+      content: content.trim(),
       metadata: {
         type: "NOTIFICATION",
         version: "1.0"
@@ -83,8 +57,6 @@ const sendMessage = async () => {
         input: messageInput
       }
     })
-
-    newMessage.value = ''
   } catch (error) {
     console.error('Error sending message:', error)
   } finally {
@@ -233,36 +205,6 @@ defineExpose({
   padding: 20px;
 }
 
-.message-list {
-  height: 400px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 10px;
-  margin-bottom: 20px;
-}
-
-.message-item {
-  margin-bottom: 10px;
-  padding: 10px;
-  background-color: #f5f5f5;
-  border-radius: 4px;
-}
-
-.message-content {
-  margin-bottom: 5px;
-}
-
-.message-meta {
-  font-size: 0.8em;
-  color: #666;
-}
-
-.message-input {
-  display: flex;
-  gap: 10px;
-}
-
 input {
   flex: 1;
   padding: 8px;
@@ -284,9 +226,4 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.loading, .no-messages {
-  text-align: center;
-  padding: 20px;
-  color: #666;
-}
 </style>

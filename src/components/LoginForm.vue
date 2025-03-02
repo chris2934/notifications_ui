@@ -195,22 +195,28 @@ const handleSubmit = async () => {
   border-radius: 4px;
   background-color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+  align-items: center;
+  width: 100%;
 }
 
 label {
   display: block;
-  margin-bottom: 5px;
   font-weight: 500;
   color: #333;
+  align-self: flex-start;
+  margin-bottom: 0.5rem;
 }
 
 input {
-  width: 100%;
-  padding: 8px;
+  width: 400px;
+  padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 14px;
