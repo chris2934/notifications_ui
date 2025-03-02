@@ -2,7 +2,7 @@
 <template>
   <div class="app-container">
     <header>
-      <h1>Notification System</h1>
+      <h1>Notifications</h1>
       <button v-if="isAuthenticated" @click="handleSignOut" class="sign-out-btn">
         Sign Out
       </button>
