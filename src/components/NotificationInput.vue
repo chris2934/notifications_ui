@@ -37,11 +37,9 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { generateClient } from 'aws-amplify/api'
-import { gql } from 'graphql-tag'
 
 const messages = ref([])
 const newMessage = ref('')
@@ -50,8 +48,7 @@ const loading = ref(true)
 let subscription = null
 
 const client = generateClient({
-  authMode: 'apiKey',
-  authToken: import.meta.env.VITE_APPSYNC_API_KEY,
+  authMode: 'userPool',
   disableStorage: true,
 })
 
@@ -66,10 +63,10 @@ const formatTime = (timestamp) => {
 }
 
 const sendMessage = async () => {
-  if (!newMessage.value.trim()) return;
+  if (!newMessage.value.trim()) return
 
   try {
-    sending.value = true;
+    sending.value = true
     const messageInput = {
       content: newMessage.value.trim(),
       metadata: {
@@ -78,50 +75,40 @@ const sendMessage = async () => {
       },
       status: "SENT",
       timestamp: new Date().toISOString()
-    };
+    }
 
     await client.graphql({
       query: sendMessageMutation,
       variables: {
         input: messageInput
       }
-    });
+    })
 
-    // Clear input
-    newMessage.value = '';
-
+    newMessage.value = ''
   } catch (error) {
-    console.error('Error sending message:', error);
+    console.error('Error sending message:', error)
   } finally {
-    sending.value = false;
+    sending.value = false
   }
 }
 
 const handleSubmit = async (event) => {
-  event.preventDefault();
-  await sendMessage();
+  event.preventDefault()
+  await sendMessage()
 }
 
 const fetchMessages = async () => {
   try {
-    loading.value = true;
+    loading.value = true
     const response = await client.graphql({
       query: GET_MESSAGES,
-      authMode: 'apiKey',
-      authToken: import.meta.env.VITE_APPSYNC_API_KEY
-    });
-    // Get messages from response and ensure it's an array
-    const fetchedMessages = response.data?.getMessages || [];
+      authMode: 'userPool',
+    })
 
-    // Filter and map valid messages
+    const fetchedMessages = response.data?.getMessages || []
+
     messages.value = fetchedMessages
-        .filter(msg => {
-          // Validate message structure
-          return msg &&
-              msg.MessageId &&
-              msg.ReceivedAt &&
-              msg.MessageBody;
-        })
+        .filter(msg => msg?.MessageId && msg?.ReceivedAt && msg?.MessageBody)
         .map(msg => ({
           MessageId: msg.MessageId,
           ReceivedAt: msg.ReceivedAt,
@@ -134,18 +121,16 @@ const fetchMessages = async () => {
             status: msg.MessageBody.status || 'UNKNOWN',
             timestamp: msg.MessageBody.timestamp || msg.ReceivedAt
           }
-        }));
+        }))
 
-    // Sort messages by timestamp if needed
     messages.value.sort((a, b) =>
         new Date(b.MessageBody.timestamp) - new Date(a.MessageBody.timestamp)
-    );
-
+    )
   } catch (error) {
-    console.error('Error fetching messages:', error);
-    messages.value = [];
+    console.error('Error fetching messages:', error)
+    messages.value = []
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
@@ -166,6 +151,7 @@ const sendMessageMutation = `
     }
   }
 `
+
 const GET_MESSAGES = `
   query GetMessages {
     getMessages {
@@ -183,6 +169,7 @@ const GET_MESSAGES = `
     }
   }
 `
+
 const MESSAGE_SUBSCRIPTION = `
   subscription OnNewMessage {
     onNewMessage {
@@ -200,40 +187,42 @@ const MESSAGE_SUBSCRIPTION = `
     }
   }
 `
-// Make sure to wait for both operations
-onMounted(async () => {
-  await fetchMessages();
 
-  // Set up subscription
+onMounted(async () => {
+  await fetchMessages()
+
   subscription = client.graphql({
     query: MESSAGE_SUBSCRIPTION
   }).subscribe({
     next: ({ data }) => {
       if (data?.onNewMessage) {
-        // Add new message to the list
-        messages.value = [...messages.value, data.onNewMessage];
-        // Sort messages by timestamp
+        messages.value = [...messages.value, data.onNewMessage]
         messages.value.sort((a, b) =>
             new Date(b.MessageBody.timestamp) - new Date(a.MessageBody.timestamp)
-        );
+        )
       }
     },
     error: (error) => {
-      console.error('Subscription error:', error);
+      console.error('Subscription error:', error)
     }
-  });
-});
+  })
+})
 
-// Proper cleanup
 onUnmounted(() => {
-  try {
-    if (subscription) {
-      subscription.unsubscribe()
-      subscription = null
-    }
-  } catch (error) {
-    console.error('Error cleaning up subscription:', error)
+  if (subscription) {
+    subscription.unsubscribe()
+    subscription = null
   }
+})
+
+// Expose necessary methods and reactive references
+defineExpose({
+  messages,
+  newMessage,
+  sending,
+  loading,
+  handleSubmit,
+  fetchMessages
 })
 </script>
 
@@ -266,29 +255,6 @@ onUnmounted(() => {
 
 .message-meta {
   font-size: 0.8em;
-  color: #666;
-  display: flex;
-  justify-content: space-between;
-}
-
-.status {
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-weight: bold;
-}
-
-.status.sent {
-  background-color: #e3f2fd;
-  color: #1976d2;
-}
-
-.status.failed {
-  background-color: #ffebee;
-  color: #d32f2f;
-}
-
-.status.unknown {
-  background-color: #f5f5f5;
   color: #666;
 }
 

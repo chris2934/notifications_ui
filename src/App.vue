@@ -1,18 +1,88 @@
-<script setup>
-import MessagingComponent from './components/NotificationInput.vue'
-</script>
-
+<!-- App.vue -->
 <template>
-  <div id="app">
-    <h2>Notifications</h2>
-    <MessagingComponent />
+  <div class="app-container">
+    <header>
+      <h1>Notification System</h1>
+      <button v-if="isAuthenticated" @click="handleSignOut" class="sign-out-btn">
+        Sign Out
+      </button>
+    </header>
+
+    <LoginForm
+        v-if="!isAuthenticated"
+        @login-success="handleLoginSuccess"
+    />
+
+    <NotificationInput
+        v-else
+        ref="notificationInputRef"
+    />
   </div>
 </template>
 
+<script setup>
+import { ref } from 'vue'
+import { getCurrentUser, signOut } from 'aws-amplify/auth'
+import LoginForm from './components/LoginForm.vue'
+import NotificationInput from './components/NotificationInput.vue'
+
+const isAuthenticated = ref(false)
+const notificationInputRef = ref(null)
+
+const checkAuthState = async () => {
+  try {
+    await getCurrentUser()
+    isAuthenticated.value = true
+  } catch (error) {
+    isAuthenticated.value = false
+  }
+}
+
+const handleLoginSuccess = async () => {
+  isAuthenticated.value = true
+  // If you need to fetch messages after login
+  if (notificationInputRef.value) {
+    await notificationInputRef.value.fetchMessages()
+  }
+}
+
+const handleSignOut = async () => {
+  try {
+    await signOut()
+    isAuthenticated.value = false
+  } catch (error) {
+    console.error('Error signing out:', error)
+  }
+}
+
+// Check auth state when component mounts
+checkAuthState()
+</script>
+
 <style scoped>
-#app {
-  max-width: 1200px;
+.app-container {
+  max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sign-out-btn {
+  padding: 8px 16px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.sign-out-btn:hover {
+  background-color: #c82333;
 }
 </style>

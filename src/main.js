@@ -1,24 +1,16 @@
+// src/main.js
 import { createApp } from 'vue'
-import { Amplify } from 'aws-amplify'
-import awsConfig from './aws-exports'
 import App from './App.vue'
+import { Amplify } from 'aws-amplify'
+import { amplifyConfig } from './config/amplify'
 
-// Configure Amplify with proper configuration
-Amplify.configure({
-    API: {
-        GraphQL: {
-            endpoint: awsConfig.aws_appsync_graphqlEndpoint,
-            region: awsConfig.aws_appsync_region,
-            defaultAuthMode: 'apiKey',
-            apiKey: awsConfig.aws_appsync_apiKey
-        }
-    },
-    //Disable storage
-    ssr: true,
-    Storage: {
-        skipStorageConfig: true
-    }
-})
+// Configure Amplify
+try {
+    console.log('Amplify Configuration:', amplifyConfig) // For debugging
+    Amplify.configure(amplifyConfig)
+} catch (error) {
+    console.error('Amplify configuration error:', error)
+}
 
 const app = createApp(App)
 app.mount('#app')
