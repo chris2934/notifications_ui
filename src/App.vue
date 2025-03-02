@@ -8,12 +8,12 @@
       </button>
     </header>
 
-    <LoginForm
+    <MessageLoginForm
         v-if="!isAuthenticated"
         @login-success="handleLoginSuccess"
     />
 
-    <NotificationInput
+    <MessageApp
         v-else
         ref="notificationInputRef"
     />
@@ -23,8 +23,8 @@
 <script setup>
 import { ref } from 'vue'
 import { getCurrentUser, signOut } from 'aws-amplify/auth'
-import LoginForm from './components/LoginForm.vue'
-import NotificationInput from './components/NotificationInput.vue'
+import MessageLoginForm from './components/MessageLoginForm.vue'
+import MessageApp from './components/MessageApp.vue'
 
 const isAuthenticated = ref(false)
 const notificationInputRef = ref(null)
