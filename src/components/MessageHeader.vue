@@ -2,9 +2,10 @@
   <header class="sticky-header">
     <div class="header-content">
       <h1>Notifications</h1>
-      <div class="notification-bell" @click="toggleMessages">
-        <span class="bell-icon">🔔</span>
-        <span v-if="unreadCount" class="notification-badge">{{ unreadCount }}</span>
+      <div class="notification-icon" @click="toggleMessages">
+      <span class="material-symbols-outlined" :class="{ 'has-unread': unreadCount }">
+        {{ unreadCount ? 'notifications_unread' : 'notifications' }}
+      </span>
       </div>
     </div>
     <div v-if="isMessageListOpen" class="message-dropdown">
@@ -17,7 +18,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import {ref} from 'vue'
 import MessageList from './MessageList.vue'
 
 const props = defineProps({
@@ -41,8 +42,20 @@ const toggleMessages = () => {
   isMessageListOpen.value = !isMessageListOpen.value
 }
 </script>
-
 <style scoped>
+:root {
+  --notification-dot-color: #ff0000;
+}
+.notification-icon:hover {
+  cursor: pointer;
+}
+.notification-icon .material-symbols-outlined {
+  font-size: 36px;
+  font-variation-settings: 'FILL' 0,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 48;
+}
 .sticky-header {
   position: fixed;
   top: 0;
@@ -52,7 +65,6 @@ const toggleMessages = () => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1000;
 }
-
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -61,30 +73,6 @@ const toggleMessages = () => {
   max-width: 1200px;
   margin: 0 auto;
 }
-
-.notification-bell {
-  position: relative;
-  cursor: pointer;
-  padding: 8px;
-}
-
-.bell-icon {
-  font-size: 1.5rem;
-}
-
-.notification-badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background-color: #ff4444;
-  color: white;
-  border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 0.75rem;
-  min-width: 18px;
-  text-align: center;
-}
-
 .message-dropdown {
   position: absolute;
   right: 2rem;
@@ -96,4 +84,17 @@ const toggleMessages = () => {
   max-height: 400px;
   overflow-y: auto;
 }
+.notification-icon .has-unread  {
+  background: linear-gradient(currentColor, currentColor),
+  linear-gradient(red, red);
+  background-clip: text, text;
+  -webkit-background-clip: text, text;
+  color: transparent;
+  font-variation-settings:
+      'FILL' 1,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 48;
+}
+
 </style>

@@ -3,6 +3,8 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import { Amplify } from 'aws-amplify'
 import { amplifyConfig } from './config/amplify'
+import '@fontsource/material-symbols-outlined'
+import 'material-symbols'
 
 // Configure Amplify
 try {
