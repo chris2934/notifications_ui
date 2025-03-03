@@ -1,4 +1,3 @@
-<!-- MessageList.vue -->
 <template>
   <div class="message-list">
     <div v-if="loading" class="loading">Loading messages...</div>

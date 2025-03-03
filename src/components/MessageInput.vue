@@ -1,4 +1,3 @@
-<!-- MessageInput.vue -->
 <template>
   <form ref="form" class="message-input" @submit.prevent="handleSubmit">
     <input
