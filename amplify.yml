@@ -4,6 +4,7 @@ backend:
     preBuild:
       commands:
         - npm install -g @aws-amplify/cli
+        - amplify pull --yes
     build:
       commands:
         - amplify push --yes
