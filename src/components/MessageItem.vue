@@ -1,4 +1,3 @@
-<!-- MessageItem.vue -->
 <template>
   <div class="message-item">
     <div class="message-content">
