@@ -198,6 +198,17 @@
           "Ref": "UnauthRoleName"
         }
       }
+    },
+    "hostingamplifyhosting": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "https://s3.amazonaws.com/amplify-notificationsui-dev-538e9-deployment/amplify-cfn-templates/hosting/amplifyhosting-template.json",
+        "Parameters": {
+          "appId": "d2vv1gnx7qc601",
+          "type": "manual",
+          "env": "dev"
+        }
+      }
     }
   }
 }

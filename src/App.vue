@@ -1,10 +1,11 @@
 <template>
   <div class="app-container">
-    <header>
-      <h1>Notifications</h1>
-      <button v-if="isAuthenticated" @click="handleSignOut" class="sign-out-btn">
-        Sign Out
-      </button>
+    <header class="sticky-header">
+      <div v-if="isAuthenticated" class="header-controls">
+          <button @click="handleSignOut" class="sign-out-btn">
+            Sign Out
+          </button>
+        </div>
     </header>
 
     <MessageLoginForm
@@ -20,8 +21,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { getCurrentUser, signOut } from 'aws-amplify/auth'
+import {ref} from 'vue'
+import {getCurrentUser, signOut} from 'aws-amplify/auth'
 import MessageLoginForm from './components/MessageLoginForm.vue'
 import MessageApp from './components/MessageApp.vue'
 
@@ -59,29 +60,26 @@ checkAuthState()
 </script>
 
 <style scoped>
-.app-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
+header {
+  padding: 1rem;
 }
 
-header {
+.header-controls {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  justify-content: flex-end;
+  gap: 1rem;
 }
 
 .sign-out-btn {
-  padding: 8px 16px;
-  background-color: #dc3545;
-  color: white;
+  padding: 0.5rem 1rem;
   border: none;
   border-radius: 4px;
+  background-color: #f0f0f0;
   cursor: pointer;
 }
 
 .sign-out-btn:hover {
-  background-color: #c82333;
+  background-color: #e0e0e0;
 }
 </style>

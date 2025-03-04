@@ -1,44 +1,66 @@
 <template>
-  <div class="messaging-container">
-    <MessageList
+  <div class="app-container">
+    <Header
         :messages="messages"
         :loading="loading"
+        :unread-count="unreadCount"
     />
-    <MessageInput
-        :sending="sending"
-        @send="sendMessage"
-    />
+    <div class="main-content">
+      <MessageInput
+          :sending="sending"
+          @send="sendMessage"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { generateClient } from 'aws-amplify/api'
-import MessageList from './MessageList.vue'
+import Header from './MessageHeader.vue'
 import MessageInput from './MessageInput.vue'
+import {
+  GET_MESSAGES,
+  SEND_MESSAGE_MUTATION,
+  MESSAGE_SUBSCRIPTION
+} from '../graphql/queries'
+import { formatTimestamp, sortMessagesByTimestamp } from '../utils/messageHelpers'
 
+// State
 const messages = ref([])
-const newMessage = ref('')
 const sending = ref(false)
 const loading = ref(true)
 let subscription = null
 
+// Computed
+const unreadCount = computed(() =>
+    messages.value.filter(message => !message.read).length
+)
+
+// Client setup
 const client = generateClient({
   authMode: 'userPool',
   disableStorage: true,
 })
 
-const formatTime = (timestamp) => {
-  if (!timestamp) return 'No time'
-  try {
-    return new Date(timestamp).toLocaleTimeString()
-  } catch (error) {
-    console.error('Error formatting time:', error)
-    return 'Invalid time'
+// Message handling
+const transformMessage = (msg) => ({
+  MessageId: msg.MessageId,
+  ReceivedAt: msg.ReceivedAt,
+  MessageBody: {
+    content: msg.MessageBody.content || '',
+    metadata: {
+      type: msg.MessageBody.metadata?.type || 'NOTIFICATION',
+      version: msg.MessageBody.metadata?.version || '1.0'
+    },
+    status: msg.MessageBody.status || 'UNKNOWN',
+    timestamp: msg.MessageBody.timestamp || msg.ReceivedAt
   }
-}
+})
 
 const sendMessage = async (content) => {
+  if (!content?.trim()) return
+
   try {
     sending.value = true
     const messageInput = {
@@ -52,21 +74,14 @@ const sendMessage = async (content) => {
     }
 
     await client.graphql({
-      query: sendMessageMutation,
-      variables: {
-        input: messageInput
-      }
+      query: SEND_MESSAGE_MUTATION,
+      variables: { input: messageInput }
     })
   } catch (error) {
     console.error('Error sending message:', error)
   } finally {
     sending.value = false
   }
-}
-
-const handleSubmit = async (event) => {
-  event.preventDefault()
-  await sendMessage()
 }
 
 const fetchMessages = async () => {
@@ -78,26 +93,11 @@ const fetchMessages = async () => {
     })
 
     const fetchedMessages = response.data?.getMessages || []
-
     messages.value = fetchedMessages
         .filter(msg => msg?.MessageId && msg?.ReceivedAt && msg?.MessageBody)
-        .map(msg => ({
-          MessageId: msg.MessageId,
-          ReceivedAt: msg.ReceivedAt,
-          MessageBody: {
-            content: msg.MessageBody.content || '',
-            metadata: {
-              type: msg.MessageBody.metadata?.type || 'NOTIFICATION',
-              version: msg.MessageBody.metadata?.version || '1.0'
-            },
-            status: msg.MessageBody.status || 'UNKNOWN',
-            timestamp: msg.MessageBody.timestamp || msg.ReceivedAt
-          }
-        }))
+        .map(transformMessage)
+        .sort(sortMessagesByTimestamp)
 
-    messages.value.sort((a, b) =>
-        new Date(b.MessageBody.timestamp) - new Date(a.MessageBody.timestamp)
-    )
   } catch (error) {
     console.error('Error fetching messages:', error)
     messages.value = []
@@ -106,78 +106,26 @@ const fetchMessages = async () => {
   }
 }
 
-const sendMessageMutation = `
-  mutation SendMessage($input: SendMessageInput!) {
-    sendMessage(input: $input) {
-      MessageId
-      ReceivedAt
-      MessageBody {
-        content
-        metadata {
-          type
-          version
-        }
-        status
-        timestamp
-      }
-    }
-  }
-`
-
-const GET_MESSAGES = `
-  query GetMessages {
-    getMessages {
-      MessageId
-      ReceivedAt
-      MessageBody {
-        content
-        metadata {
-          type
-          version
-        }
-        status
-        timestamp
-      }
-    }
-  }
-`
-
-const MESSAGE_SUBSCRIPTION = `
-  subscription OnNewMessage {
-    onNewMessage {
-      MessageId
-      ReceivedAt
-      MessageBody {
-        content
-        metadata {
-          type
-          version
-        }
-        status
-        timestamp
-      }
-    }
-  }
-`
-
-onMounted(async () => {
-  await fetchMessages()
-
+const setupMessageSubscription = () => {
   subscription = client.graphql({
     query: MESSAGE_SUBSCRIPTION
   }).subscribe({
     next: ({ data }) => {
       if (data?.onNewMessage) {
-        messages.value = [...messages.value, data.onNewMessage]
-        messages.value.sort((a, b) =>
-            new Date(b.MessageBody.timestamp) - new Date(a.MessageBody.timestamp)
-        )
+        messages.value = [
+          ...messages.value,
+          transformMessage(data.onNewMessage)
+        ].sort(sortMessagesByTimestamp)
       }
     },
-    error: (error) => {
-      console.error('Subscription error:', error)
-    }
+    error: (error) => console.error('Subscription error:', error)
   })
+}
+
+// Lifecycle hooks
+onMounted(async () => {
+  await fetchMessages()
+  setupMessageSubscription()
 })
 
 onUnmounted(() => {
@@ -190,40 +138,23 @@ onUnmounted(() => {
 // Expose necessary methods and reactive references
 defineExpose({
   messages,
-  newMessage,
   sending,
   loading,
-  handleSubmit,
+  sendMessage,
   fetchMessages
 })
 </script>
 
 <style scoped>
-.messaging-container {
+.app-container {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
+  min-height: 100vh;
 }
 
-input {
-  flex: 1;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+.main-content {
+  margin-top: 80px;
+  padding: 1rem;
 }
-
-button {
-  padding: 8px 16px;
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
 </style>
