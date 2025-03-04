@@ -6,7 +6,7 @@
       <div v-for="message in messages"
            :key="message.MessageId"
            class="message-wrapper"
-           :class="{ 'unread': !message.isRead }"
+           :class="{ 'unread': !message.isRead, 'read': message.isRead }"
            @click="markAsRead(message)">
         <MessageItem
             :message="message"
@@ -19,6 +19,10 @@
 
 <script setup>
 import MessageItem from './MessageItem.vue'
+import {generateClient} from 'aws-amplify/api'
+import {UPDATE_MESSAGE_READ_STATUS } from "@/graphql/queries.js"
+
+const client = generateClient()
 
 defineProps({
   messages: {
@@ -31,9 +35,22 @@ defineProps({
   }
 })
 
-function markAsRead(message) {
-  if (!message.isRead) {
+const markAsRead = async (message) => {
+  if (message.isRead) return
+  try {
+    const response = await client.graphql({
+      query: UPDATE_MESSAGE_READ_STATUS,
+      variables: {
+        input: {
+          MessageId: message.MessageId,
+          isRead: true,
+          ReceivedAt: message.ReceivedAt // Include this if you have it
+        }
+      }
+    })
     message.isRead = true
+  } catch (error) {
+    console.error('Error marking message as read:', error)
   }
 }
 </script>

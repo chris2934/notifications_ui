@@ -4,6 +4,7 @@
         :messages="messages"
         :loading="loading"
         :unread-count="unreadCount"
+        :mark-as-read="markAsRead"
     />
     <div class="main-content">
       <MessageInput
@@ -22,7 +23,7 @@ import MessageInput from './MessageInput.vue'
 import {
   GET_MESSAGES,
   SEND_MESSAGE_MUTATION,
-  MESSAGE_SUBSCRIPTION
+  MESSAGE_SUBSCRIPTION, UPDATE_MESSAGE_READ_STATUS
 } from '../graphql/queries'
 import { formatTimestamp, sortMessagesByTimestamp } from '../utils/messageHelpers'
 
@@ -34,7 +35,7 @@ let subscription = null
 
 // Computed
 const unreadCount = computed(() =>
-    messages.value.filter(message => !message.read).length
+    messages.value.filter(message => !message.isRead).length
 )
 
 // Client setup
@@ -47,6 +48,7 @@ const client = generateClient({
 const transformMessage = (msg) => ({
   MessageId: msg.MessageId,
   ReceivedAt: msg.ReceivedAt,
+  isRead: msg.isRead || false, // Add this line
   MessageBody: {
     content: msg.MessageBody.content || '',
     metadata: {
@@ -57,6 +59,31 @@ const transformMessage = (msg) => ({
     timestamp: msg.MessageBody.timestamp || msg.ReceivedAt
   }
 })
+
+const markAsRead = async (messageId) => {
+  try {
+    const response = await client.graphql({
+      query: UPDATE_MESSAGE_READ_STATUS,
+      variables: {
+        input: {
+          MessageId: messageId,
+          isRead: true
+        }
+      }
+    })
+
+    // Update local state
+    messages.value = messages.value.map(msg =>
+        msg.MessageId === messageId
+            ? { ...msg, isRead: true }
+            : msg
+    )
+  } catch (error) {
+    console.error('Error marking message as read:', error)
+  }
+}
+
+
 
 const sendMessage = async (content) => {
   if (!content?.trim()) return
@@ -91,7 +118,6 @@ const fetchMessages = async () => {
       query: GET_MESSAGES,
       authMode: 'userPool',
     })
-
     const fetchedMessages = response.data?.getMessages || []
     messages.value = fetchedMessages
         .filter(msg => msg?.MessageId && msg?.ReceivedAt && msg?.MessageBody)
