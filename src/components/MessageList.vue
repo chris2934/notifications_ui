@@ -5,7 +5,9 @@
     <div v-else class="messages-container">
       <div v-for="message in messages"
            :key="message.MessageId"
-           class="message-wrapper">
+           class="message-wrapper"
+           :class="{ 'unread': !message.isRead }"
+           @click="markAsRead(message)">
         <MessageItem
             :message="message"
             class="message-item"
@@ -28,6 +30,12 @@ defineProps({
     default: false
   }
 })
+
+function markAsRead(message) {
+  if (!message.isRead) {
+    message.isRead = true
+  }
+}
 </script>
 <style scoped>
 .message-list {
@@ -52,10 +60,15 @@ defineProps({
   padding: 8px 12px;
   border-bottom: 1px solid #e0e0e0;
   background: transparent;
+  cursor: pointer;
 }
 
 .message-wrapper:last-child {
   border-bottom: none;
+}
+
+.unread {
+  font-weight: bold
 }
 </style>
 
