@@ -34,8 +34,8 @@ const formatTime = (timestamp) => {
 .message-item {
   margin-bottom: 10px;
   padding: 10px;
-  background-color: #f5f5f5;
   border-radius: 4px;
+  background: transparent !important;
 }
 
 .message-content {
