@@ -59,18 +59,20 @@ const handleSignOut = async () => {
 checkAuthState()
 </script>
 
-<style scoped>
+<style>
+body {
+  font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI",
+  Helvetica, Arial, sans-serif;
+}
 header {
   padding: 1rem;
 }
-
 .header-controls {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 1rem;
 }
-
 .sign-out-btn {
   padding: 0.5rem 1rem;
   border: none;
@@ -78,7 +80,6 @@ header {
   background-color: #f0f0f0;
   cursor: pointer;
 }
-
 .sign-out-btn:hover {
   background-color: #e0e0e0;
 }
