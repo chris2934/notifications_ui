@@ -25,6 +25,7 @@ import {ref} from 'vue'
 import {getCurrentUser, signOut} from 'aws-amplify/auth'
 import MessageLoginForm from './components/MessageLoginForm.vue'
 import MessageApp from './components/MessageApp.vue'
+import { onMounted } from 'vue'
 
 const isAuthenticated = ref(false)
 const notificationInputRef = ref(null)
@@ -55,8 +56,10 @@ const handleSignOut = async () => {
   }
 }
 
-// Check auth state when component mounts
-checkAuthState()
+onMounted(() => {
+  checkAuthState()
+  document.title = 'Notifications'
+})
 </script>
 
 <style>
