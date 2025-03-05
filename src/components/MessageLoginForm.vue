@@ -73,7 +73,8 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { signIn, confirmSignIn, resetPassword, confirmResetPassword } from 'aws-amplify/auth'
+import {signIn, resetPassword, confirmResetPassword, signOut, getCurrentUser} from 'aws-amplify/auth'
+import router from "@/router/index.js";
 
 const username = ref('')
 const password = ref('')
@@ -86,7 +87,6 @@ const currentSignInData = ref(null)
 
 const emit = defineEmits(['login-success'])
 
-// Form validation
 const isFormValid = computed(() => {
   if (isResetPassword.value) {
     return username.value && verificationCode.value && newPassword.value
@@ -128,6 +128,16 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
+    // First check if there's already a signed-in user
+    try {
+      const currentUser = await getCurrentUser()
+      if (currentUser) {
+        // If there's a current user, sign them out first
+        await signOut()
+      }
+    } catch (err) {
+      // No user is signed in, proceed with sign in
+    }
     if (isResetPassword.value) {
       await confirmResetPassword({
         username: username.value,
@@ -153,6 +163,8 @@ const handleSubmit = async () => {
         // Clear form after successful login
         username.value = ''
         password.value = ''
+        // Add router navigation here
+        await router.push('/Messages')
       } else if (nextStep) {
         currentSignInData.value = { nextStep }
       }
@@ -196,6 +208,7 @@ const handleSubmit = async () => {
   background-color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 100%;
+  margin-top: 200px;
 }
 
 .form-group {

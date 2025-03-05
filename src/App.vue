@@ -1,24 +1,15 @@
 <template>
-  <div class="app-container">
-    <MessageLoginForm
-        v-if="!isAuthenticated"
-        @login-success="handleLoginSuccess"
-    />
-    <MessageApp
-        v-else
-        ref="notificationInputRef"
-    />
+  <div id="app">
+    <router-view></router-view>
   </div>
 </template>
+
 <script setup>
 import {ref} from 'vue'
 import {getCurrentUser, signOut} from 'aws-amplify/auth'
-import MessageLoginForm from './components/MessageLoginForm.vue'
-import MessageApp from './components/MessageApp.vue'
 import { onMounted } from 'vue'
 
 const isAuthenticated = ref(false)
-const notificationInputRef = ref(null)
 
 const checkAuthState = async () => {
   try {
@@ -29,22 +20,6 @@ const checkAuthState = async () => {
   }
 }
 
-const handleLoginSuccess = async () => {
-  isAuthenticated.value = true
-  // If you need to fetch messages after login
-  if (notificationInputRef.value) {
-    await notificationInputRef.value.fetchMessages()
-  }
-}
-
-const handleSignOut = async () => {
-  try {
-    await signOut()
-    isAuthenticated.value = false
-  } catch (error) {
-    console.error('Error signing out:', error)
-  }
-}
 
 onMounted(() => {
   checkAuthState()
@@ -59,21 +34,5 @@ body {
 }
 header {
   padding: 1rem;
-}
-.header-controls {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 1rem;
-}
-.sign-out-btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  background-color: #f0f0f0;
-  cursor: pointer;
-}
-.sign-out-btn:hover {
-  background-color: #e0e0e0;
 }
 </style>
