@@ -56,8 +56,8 @@ const markAsRead = async (message) => {
 </script>
 <style scoped>
 .message-list {
-  height: 600px;
-  overflow-y: auto;
+  height: 100vh;
+  overflow-y: hidden;
   background: transparent;
 }
 
