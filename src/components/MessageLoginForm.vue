@@ -62,11 +62,11 @@
         </span>
       </button>
 
-      <div class="forgot-password">
-        <a href="#" @click.prevent="handleForgotPassword">
-          {{ isResetPassword ? 'Back to Login' : 'Forgot Password?' }}
-        </a>
-      </div>
+<!--      <div class="forgot-password">-->
+<!--        <a href="#" @click.prevent="handleForgotPassword">-->
+<!--          {{ isResetPassword ? 'Back to Login' : 'Forgot Password?' }}-->
+<!--        </a>-->
+<!--      </div>-->
     </form>
   </div>
 </template>
