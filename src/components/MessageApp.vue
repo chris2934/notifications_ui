@@ -176,11 +176,15 @@ defineExpose({
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden
 }
 
 .main-content {
   margin-top: 80px;
   padding: 1rem;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 </style>
