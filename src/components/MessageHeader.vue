@@ -81,7 +81,7 @@ const toggleMessages = () => {
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   width: 300px;
-  max-height: 400px;
+  max-height: 500px;
   overflow-y: auto;
 }
 .notification-icon .has-unread  {
