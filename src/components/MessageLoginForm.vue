@@ -8,7 +8,7 @@
             v-model="username"
             type="text"
             required
-            autocomplete="username"
+            autocomplete="off"
             :disabled="loading"
         />
       </div>
@@ -20,7 +20,7 @@
             v-model="password"
             type="password"
             required
-            autocomplete="current-password"
+            autocomplete="off"
             :disabled="loading"
         />
       </div>
