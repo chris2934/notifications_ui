@@ -41,6 +41,8 @@ const handleSubmit = async (event) => {
 .message-input {
   display: flex;
   gap: 10px;
+  margin-top: 200px;
+  height: 50px;
 }
 
 input {

@@ -1,25 +1,15 @@
 <template>
   <div class="app-container">
-    <header class="sticky-header">
-      <div v-if="isAuthenticated" class="header-controls">
-          <button @click="handleSignOut" class="sign-out-btn">
-            Sign Out
-          </button>
-        </div>
-    </header>
-
     <MessageLoginForm
         v-if="!isAuthenticated"
         @login-success="handleLoginSuccess"
     />
-
     <MessageApp
         v-else
         ref="notificationInputRef"
     />
   </div>
 </template>
-
 <script setup>
 import {ref} from 'vue'
 import {getCurrentUser, signOut} from 'aws-amplify/auth'
