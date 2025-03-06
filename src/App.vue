@@ -6,7 +6,7 @@
 
 <script setup>
 import {ref} from 'vue'
-import {getCurrentUser, signOut} from 'aws-amplify/auth'
+import {getCurrentUser} from 'aws-amplify/auth'
 import { onMounted } from 'vue'
 
 const isAuthenticated = ref(false)
