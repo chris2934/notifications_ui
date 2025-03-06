@@ -3,8 +3,8 @@
     <div class="header-content">
       <h1>Notifications</h1>
       <div class="header-icons">
-        <!-- Dynamically update icon color and type -->
-        <div class="notification-icon" @click="toggleMessages">
+        <!-- Notification Icon -->
+        <div class="notification-icon" @click="toggleMessages($event)">
           <span
               class="material-symbols-outlined"
               :style="{ color: unreadCount > 0 ? 'red' : 'black' }"
@@ -14,7 +14,8 @@
         </div>
       </div>
     </div>
-    <div v-if="isMessageListOpen" class="message-dropdown">
+    <!-- Message Dropdown -->
+    <div v-if="isMessageListOpen" ref="dropdown" class="message-dropdown">
       <MessageList
           :messages="messages"
           :loading="loading"
@@ -25,7 +26,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import MessageList from './MessageList.vue';
 
 // Props for the parent component
@@ -41,25 +42,65 @@ const props = defineProps({
 });
 
 // Reactive state to track dropdown open/close status
-const isMessageListOpen = ref(false);
+const isMessageListOpen = ref(true); // Start with dropdown open by default
 
-// Toggle dropdown (no longer marks messages as read automatically)
-const toggleMessages = () => {
+// Reference to the dropdown menu element
+const dropdown = ref(null);
+
+// Computed property for unread messages
+const unreadCount = computed(() => props.messages.filter(message => !message.isRead).length);
+
+// Toggle the dropdown open/close
+const toggleMessages = (event) => {
+  event.stopPropagation(); // Prevent event from triggering the "outside click" logic
   isMessageListOpen.value = !isMessageListOpen.value;
-};
 
-// Computed unread count, updates dynamically when `messages` changes
-const unreadCount = computed(() => {
-  return props.messages.filter(message => !message.isRead).length;
-});
-
-// Mark a specific message as read when clicked in the dropdown
-const handleMarkAsRead = (clickedMessage) => {
-  const message = props.messages.find(msg => msg.id === clickedMessage.id);
-  if (message) {
-    message.isRead = true;
+  if (isMessageListOpen.value) {
+    addOutsideClickListener();
+  } else {
+    removeOutsideClickListener();
   }
 };
+
+// Handle marking messages as read when clicked (inside the dropdown)
+const handleMarkAsRead = (clickedMessage) => {
+  const message = props.messages.find(msg => msg.id === clickedMessage.id);
+  if (message) message.isRead = true;
+};
+
+// Detect clicks outside the dropdown
+const handleClickOutside = (event) => {
+  if (
+      dropdown.value && // Ensure dropdown exists
+      !dropdown.value.contains(event.target) && // Click is outside the dropdown
+      event.target.closest('.notification-icon') === null // Click is NOT on the notification-icon
+  ) {
+    isMessageListOpen.value = false;
+    removeOutsideClickListener();
+  }
+};
+
+// Add the outside click listener
+const addOutsideClickListener = () => {
+  document.addEventListener('mousedown', handleClickOutside);
+};
+
+// Remove the outside click listener
+const removeOutsideClickListener = () => {
+  document.removeEventListener('mousedown', handleClickOutside);
+};
+
+// Automatically open the dropdown on mount
+onMounted(() => {
+  if (isMessageListOpen.value) {
+    addOutsideClickListener();
+  }
+});
+
+// Cleanup listeners when the component is destroyed
+onBeforeUnmount(() => {
+  removeOutsideClickListener();
+});
 </script>
 
 <style scoped>
@@ -74,7 +115,6 @@ const handleMarkAsRead = (clickedMessage) => {
   cursor: pointer;
 }
 
-/* Avoid hardcoding colors and rely on the dynamic binding */
 .notification-icon .material-symbols-outlined {
   font-size: 36px;
   margin-right: 110px;
@@ -110,5 +150,6 @@ const handleMarkAsRead = (clickedMessage) => {
   width: 300px;
   max-height: 500px;
   overflow-y: auto;
+  z-index: 1000;
 }
 </style>
