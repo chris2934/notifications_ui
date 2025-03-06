@@ -4,23 +4,26 @@
       <h1>Notifications</h1>
       <div class="header-icons">
         <!-- Notification Icon -->
-        <div class="notification-icon" @click="toggleMessages($event)">
-          <span
-              class="material-symbols-outlined"
-              :style="{ color: unreadCount > 0 ? 'red' : 'black' }"
-          >
-            {{ unreadCount > 0 ? 'notifications_unread' : 'notifications' }}
-          </span>
+        <div class="notification-wrapper">
+          <div class="notification-icon" @click="toggleMessages($event)">
+            <span
+                class="material-symbols-outlined"
+                :style="{ color: unreadCount > 0 ? 'red' : 'black' }"
+            >
+              {{ unreadCount > 0 ? 'notifications_unread' : 'notifications' }}
+            </span>
+          </div>
+
+          <!-- Message Dropdown -->
+          <div v-if="isMessageListOpen" ref="dropdown" class="message-dropdown">
+            <MessageList
+                :messages="messages"
+                :loading="loading"
+                @mark-as-read="handleMarkAsRead"
+            />
+          </div>
         </div>
       </div>
-    </div>
-    <!-- Message Dropdown -->
-    <div v-if="isMessageListOpen" ref="dropdown" class="message-dropdown">
-      <MessageList
-          :messages="messages"
-          :loading="loading"
-          @mark-as-read="handleMarkAsRead"
-      />
     </div>
   </header>
 </template>
@@ -33,12 +36,12 @@ import MessageList from "./MessageList.vue";
 const props = defineProps({
   messages: {
     type: Array,
-    required: true
+    required: true,
   },
   loading: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 // Reactive state to track dropdown open/close status
@@ -48,8 +51,8 @@ const isMessageListOpen = ref(true); // Start with dropdown open by default
 const dropdown = ref(null);
 
 // Computed property for unread messages
-const unreadCount = computed(
-    () => props.messages.filter((message) => !message.isRead).length
+const unreadCount = computed(() =>
+    props.messages.filter((message) => !message.isRead).length
 );
 
 // Toggle the dropdown open/close
@@ -106,21 +109,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.header-icons {
-  display: flex;
-  gap: 1rem; /* Adds spacing between icons */
-  align-items: center;
-}
-
-.notification-icon:hover {
-  cursor: pointer;
-}
-
-.notification-icon .material-symbols-outlined {
-  font-size: 36px;
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 48;
-}
-
 .sticky-header {
   position: fixed;
   top: 0;
@@ -133,50 +121,70 @@ onBeforeUnmount(() => {
 
 .header-content {
   display: flex;
-  justify-content: space-between; /* Keeps title and icons aligned on opposite sides */
+  justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem; /* Padding around the header content */
+  padding: 1rem 2rem;
   max-width: 1200px;
-  margin: 0 auto; /* Center the content horizontally */
+  margin: 0 auto;
+  position: relative; /* Use relative positioning for consistent alignment */
 }
 
+.header-icons {
+  display: flex;
+  align-items: center;
+}
+
+/* Notification Icon */
+.notification-wrapper {
+  position: relative; /* Ensure dropdown aligns correctly relative to this wrapper */
+}
+
+.notification-icon {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.notification-icon .material-symbols-outlined {
+  font-size: 36px; /* Maintain icon size consistency */
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+}
+
+/* Dropdown Styling */
 .message-dropdown {
   position: absolute;
-  right: 2rem;
-  top: 100%;
+  top: calc(100% + 58px); /* Start dropdown directly below the header with a gap */
+  left: 50%; /* Center-align dropdown with the notification icon */
+  transform: translateX(-50%);
+  width: 300px;
+  max-height: 500px;
   background: white;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 300px;
-  max-height: 500px;
   overflow-y: auto;
-  z-index: 1000;
+  z-index: 1050;
+  padding: 1rem 0;
 }
 
-/* For smaller screens, reduce padding and adjust gaps */
+/* Mobile-Friendly Adjustments */
 @media (max-width: 768px) {
   .header-content {
     padding: 0.5rem 1rem;
   }
 
-  .header-icons {
-    gap: 0.5rem;
-  }
-
   .message-dropdown {
-    right: 1rem; /* Closer to the edge on smaller screens */
-    width: 250px;
+    width: 250px; /* Adjust dropdown width for smaller screens */
   }
 }
 
-/* For larger screens, extend padding for balance */
+/* Larger Screen Adjustments */
 @media (min-width: 1440px) {
   .header-content {
     padding: 1rem 3rem;
   }
 
   .message-dropdown {
-    right: 3rem; /* Further from the edge on larger screens */
+    width: 350px; /* Increase dropdown size for larger screens */
   }
 }
 </style>
