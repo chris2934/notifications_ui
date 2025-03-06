@@ -117,7 +117,7 @@ onBeforeUnmount(() => {
 
 .notification-icon .material-symbols-outlined {
   font-size: 36px;
-  margin-right: 110px;
+  margin-right: 200px;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
 }
 
