@@ -18,6 +18,7 @@
       <MessageList
           :messages="messages"
           :loading="loading"
+          @mark-as-read="handleMarkAsRead"
       />
     </div>
   </header>
@@ -42,14 +43,9 @@ const props = defineProps({
 // Reactive state to track dropdown open/close status
 const isMessageListOpen = ref(false);
 
-// Toggle dropdown and mark all messages as read when opened
+// Toggle dropdown (no longer marks messages as read automatically)
 const toggleMessages = () => {
   isMessageListOpen.value = !isMessageListOpen.value;
-
-  // Mark notifications as read when dropdown opens
-  if (isMessageListOpen.value) {
-    markMessagesAsRead();
-  }
 };
 
 // Computed unread count, updates dynamically when `messages` changes
@@ -57,13 +53,12 @@ const unreadCount = computed(() => {
   return props.messages.filter(message => !message.isRead).length;
 });
 
-// Mark all messages as read
-const markMessagesAsRead = () => {
-  props.messages.forEach(message => {
-    if (!message.isRead) {
-      message.isRead = true;
-    }
-  });
+// Mark a specific message as read when clicked in the dropdown
+const handleMarkAsRead = (clickedMessage) => {
+  const message = props.messages.find(msg => msg.id === clickedMessage.id);
+  if (message) {
+    message.isRead = true;
+  }
 };
 </script>
 
