@@ -3,10 +3,14 @@
     <div class="header-content">
       <h1>Notifications</h1>
       <div class="header-icons">
+        <!-- Dynamically update icon color and type -->
         <div class="notification-icon" @click="toggleMessages">
-      <span class="material-symbols-outlined" :class="{ 'has-unread': unreadCount }">
-        {{ unreadCount ? 'notifications_unread' : 'notifications' }}
-      </span>
+          <span
+              class="material-symbols-outlined"
+              :style="{ color: unreadCount > 0 ? 'red' : 'black' }"
+          >
+            {{ unreadCount > 0 ? 'notifications_unread' : 'notifications' }}
+          </span>
         </div>
       </div>
     </div>
@@ -20,10 +24,10 @@
 </template>
 
 <script setup>
-import {ref} from 'vue'
-import MessageList from './MessageList.vue'
+import { computed, ref } from 'vue';
+import MessageList from './MessageList.vue';
 
-
+// Props for the parent component
 const props = defineProps({
   messages: {
     type: Array,
@@ -32,17 +36,37 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false
-  },
-  unreadCount: {
-    type: Number,
-    default: 0
   }
-})
-const isMessageListOpen = ref(false)
+});
+
+// Reactive state to track dropdown open/close status
+const isMessageListOpen = ref(false);
+
+// Toggle dropdown and mark all messages as read when opened
 const toggleMessages = () => {
-  isMessageListOpen.value = !isMessageListOpen.value
-}
+  isMessageListOpen.value = !isMessageListOpen.value;
+
+  // Mark notifications as read when dropdown opens
+  if (isMessageListOpen.value) {
+    markMessagesAsRead();
+  }
+};
+
+// Computed unread count, updates dynamically when `messages` changes
+const unreadCount = computed(() => {
+  return props.messages.filter(message => !message.isRead).length;
+});
+
+// Mark all messages as read
+const markMessagesAsRead = () => {
+  props.messages.forEach(message => {
+    if (!message.isRead) {
+      message.isRead = true;
+    }
+  });
+};
 </script>
+
 <style scoped>
 .header-icons {
   display: flex;
@@ -55,13 +79,11 @@ const toggleMessages = () => {
   cursor: pointer;
 }
 
+/* Avoid hardcoding colors and rely on the dynamic binding */
 .notification-icon .material-symbols-outlined {
   font-size: 36px;
   margin-right: 110px;
-  font-variation-settings: 'FILL' 0,
-  'wght' 400,
-  'GRAD' 0,
-  'opsz' 48;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
 }
 
 .sticky-header {
@@ -94,17 +116,4 @@ const toggleMessages = () => {
   max-height: 500px;
   overflow-y: auto;
 }
-
-.notification-icon .has-unread {
-  background: linear-gradient(currentColor, currentColor),
-  linear-gradient(red, red);
-  background-clip: text, text;
-  -webkit-background-clip: text, text;
-  color: transparent;
-  font-variation-settings: 'FILL' 1,
-  'wght' 400,
-  'GRAD' 0,
-  'opsz' 48;
-}
-
 </style>
