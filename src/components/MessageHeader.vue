@@ -26,8 +26,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import MessageList from './MessageList.vue';
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import MessageList from "./MessageList.vue";
 
 // Props for the parent component
 const props = defineProps({
@@ -48,7 +48,9 @@ const isMessageListOpen = ref(true); // Start with dropdown open by default
 const dropdown = ref(null);
 
 // Computed property for unread messages
-const unreadCount = computed(() => props.messages.filter(message => !message.isRead).length);
+const unreadCount = computed(
+    () => props.messages.filter((message) => !message.isRead).length
+);
 
 // Toggle the dropdown open/close
 const toggleMessages = (event) => {
@@ -64,7 +66,7 @@ const toggleMessages = (event) => {
 
 // Handle marking messages as read when clicked (inside the dropdown)
 const handleMarkAsRead = (clickedMessage) => {
-  const message = props.messages.find(msg => msg.id === clickedMessage.id);
+  const message = props.messages.find((msg) => msg.id === clickedMessage.id);
   if (message) message.isRead = true;
 };
 
@@ -73,7 +75,7 @@ const handleClickOutside = (event) => {
   if (
       dropdown.value && // Ensure dropdown exists
       !dropdown.value.contains(event.target) && // Click is outside the dropdown
-      event.target.closest('.notification-icon') === null // Click is NOT on the notification-icon
+      event.target.closest(".notification-icon") === null // Click is NOT on the notification-icon
   ) {
     isMessageListOpen.value = false;
     removeOutsideClickListener();
@@ -82,12 +84,12 @@ const handleClickOutside = (event) => {
 
 // Add the outside click listener
 const addOutsideClickListener = () => {
-  document.addEventListener('mousedown', handleClickOutside);
+  document.addEventListener("mousedown", handleClickOutside);
 };
 
 // Remove the outside click listener
 const removeOutsideClickListener = () => {
-  document.removeEventListener('mousedown', handleClickOutside);
+  document.removeEventListener("mousedown", handleClickOutside);
 };
 
 // Automatically open the dropdown on mount
@@ -106,9 +108,8 @@ onBeforeUnmount(() => {
 <style scoped>
 .header-icons {
   display: flex;
-  justify-content: space-between;
+  gap: 1rem; /* Adds spacing between icons */
   align-items: center;
-  transform: translateX(100px);
 }
 
 .notification-icon:hover {
@@ -117,8 +118,7 @@ onBeforeUnmount(() => {
 
 .notification-icon .material-symbols-outlined {
   font-size: 36px;
-  margin-right: 200px;
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 48;
 }
 
 .sticky-header {
@@ -133,11 +133,11 @@ onBeforeUnmount(() => {
 
 .header-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* Keeps title and icons aligned on opposite sides */
   align-items: center;
-  padding: 1rem 2rem;
+  padding: 1rem 2rem; /* Padding around the header content */
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 0 auto; /* Center the content horizontally */
 }
 
 .message-dropdown {
@@ -151,5 +151,32 @@ onBeforeUnmount(() => {
   max-height: 500px;
   overflow-y: auto;
   z-index: 1000;
+}
+
+/* For smaller screens, reduce padding and adjust gaps */
+@media (max-width: 768px) {
+  .header-content {
+    padding: 0.5rem 1rem;
+  }
+
+  .header-icons {
+    gap: 0.5rem;
+  }
+
+  .message-dropdown {
+    right: 1rem; /* Closer to the edge on smaller screens */
+    width: 250px;
+  }
+}
+
+/* For larger screens, extend padding for balance */
+@media (min-width: 1440px) {
+  .header-content {
+    padding: 1rem 3rem;
+  }
+
+  .message-dropdown {
+    right: 3rem; /* Further from the edge on larger screens */
+  }
 }
 </style>
