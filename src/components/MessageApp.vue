@@ -7,10 +7,7 @@
         :mark-as-read="markAsRead"
     />
     <div class="main-content">
-      <MessageInput
-          :sending="sending"
-          @send="sendMessage"
-      />
+      <!-- Removed MessageInput and its send-related functionality -->
     </div>
   </div>
 </template>
@@ -19,21 +16,19 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { generateClient } from 'aws-amplify/api'
 import Header from './MessageHeader.vue'
-import MessageInput from './MessageInput.vue'
 import {
   GET_MESSAGES,
-  SEND_MESSAGE_MUTATION,
-  MESSAGE_SUBSCRIPTION, UPDATE_MESSAGE_READ_STATUS
+  MESSAGE_SUBSCRIPTION,
+  UPDATE_MESSAGE_READ_STATUS
 } from '../graphql/queries'
 import { formatTimestamp, sortMessagesByTimestamp } from '../utils/messageHelpers'
 
 // State
 const messages = ref([])
-const sending = ref(false)
 const loading = ref(true)
 let subscription = null
 
-// Computed
+// Computed property for unread messages count
 const unreadCount = computed(() =>
     messages.value.filter(message => !message.isRead).length
 )
@@ -44,11 +39,11 @@ const client = generateClient({
   disableStorage: true,
 })
 
-// Message handling
+// Helper to transform messages
 const transformMessage = (msg) => ({
   MessageId: msg.MessageId,
   ReceivedAt: msg.ReceivedAt,
-  isRead: msg.isRead || false, // Add this line
+  isRead: msg.isRead || false,
   MessageBody: {
     content: msg.MessageBody.content || '',
     metadata: {
@@ -60,9 +55,10 @@ const transformMessage = (msg) => ({
   }
 })
 
+// Function to mark a message as read
 const markAsRead = async (messageId) => {
   try {
-    const response = await client.graphql({
+    await client.graphql({
       query: UPDATE_MESSAGE_READ_STATUS,
       variables: {
         input: {
@@ -83,34 +79,7 @@ const markAsRead = async (messageId) => {
   }
 }
 
-
-
-const sendMessage = async (content) => {
-  if (!content?.trim()) return
-
-  try {
-    sending.value = true
-    const messageInput = {
-      content: content.trim(),
-      metadata: {
-        type: "NOTIFICATION",
-        version: "1.0"
-      },
-      status: "SENT",
-      timestamp: new Date().toISOString()
-    }
-
-    await client.graphql({
-      query: SEND_MESSAGE_MUTATION,
-      variables: { input: messageInput }
-    })
-  } catch (error) {
-    console.error('Error sending message:', error)
-  } finally {
-    sending.value = false
-  }
-}
-
+// Fetch messages
 const fetchMessages = async () => {
   try {
     loading.value = true
@@ -132,6 +101,7 @@ const fetchMessages = async () => {
   }
 }
 
+// Set up subscription to new messages
 const setupMessageSubscription = () => {
   subscription = client.graphql({
     query: MESSAGE_SUBSCRIPTION
@@ -164,9 +134,7 @@ onUnmounted(() => {
 // Expose necessary methods and reactive references
 defineExpose({
   messages,
-  sending,
   loading,
-  sendMessage,
   fetchMessages
 })
 </script>
