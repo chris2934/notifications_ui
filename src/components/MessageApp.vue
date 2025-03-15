@@ -1,25 +1,16 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import axios from "axios";
-import { createClient } from "graphql-ws";
 import Header from "./MessageHeader.vue";
-import { GET_MESSAGES, MESSAGE_SUBSCRIPTION, UPDATE_MESSAGE_READ_STATUS } from "../graphql/queries";
+import { GET_MESSAGES, UPDATE_MESSAGE_READ_STATUS } from "../graphql/queries";
 import { sortMessagesByTimestamp } from "../utils/messageHelpers";
 
-// Load the GraphQL API endpoint and WebSocket endpoint from the .env file
 const apiKey = import.meta.env.VITE_API_KEY;
 const graphqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT; // For HTTP POST
-const graphqlWsEndpoint = import.meta.env.VITE_GRAPHQL_WS_ENDPOINT; // For WebSocket
 
-// Reactive states
 const messages = ref([]);
 const loading = ref(true);
 
-// State to maintain WebSocket subscription
-let subscriptionClient = null;
-let subscriptionDisposeFn = null;
-
-// Computed property: count of unread messages
 const unreadCount = computed(() =>
     messages.value.filter((message) => !message.isRead).length
 );
@@ -39,17 +30,17 @@ const transformMessage = (msg) => ({
     timestamp: msg?.MessageBody?.timestamp || msg?.ReceivedAt,
   },
 });
-
-// Fetch messages using axios
 const fetchMessages = async () => {
   try {
     loading.value = true;
 
     const response = await axios.post(graphqlEndpoint, {
       query: GET_MESSAGES,
-      headers:{
-        'x-api-key': apiKey,
-      }
+    },
+        {
+          headers: {
+            "x-api-key": apiKey,
+          },
     });
     const fetchedMessages = response?.data?.data?.getMessages || [];
     messages.value = fetchedMessages
@@ -64,8 +55,6 @@ const fetchMessages = async () => {
     loading.value = false;
   }
 };
-
-// Mark a message as read in the backend and update it locally
 const markAsRead = async (messageId) => {
   try {
     await axios.post(graphqlEndpoint, {
@@ -82,70 +71,11 @@ const markAsRead = async (messageId) => {
     console.error("Error marking message as read:", error);
   }
 };
-
-// Setup WebSocket subscription for new messages
-// const setupMessageSubscription = () => {
-//   // Initialize the WebSocket subscription client
-//   subscriptionClient = createClient({
-//     url: graphqlWsEndpoint,
-//     connectionParams: {
-//       Authorization: `Bearer YOUR_AUTH_TOKEN`, // Replace with actual token if required
-//     },
-//   });
-//
-//   // Subscribe to MESSAGE_SUBSCRIPTION
-//   subscriptionDisposeFn = subscriptionClient.subscribe(
-//       {
-//         query: MESSAGE_SUBSCRIPTION,
-//       },
-//       {
-//         next: ({ data, errors }) => {
-//           if (errors) {
-//             console.error("Subscription errors:", errors);
-//             return;
-//           }
-//
-//           const newMessage = data?.onNewMessage;
-//           if (newMessage) {
-//             messages.value = [
-//               ...messages.value,
-//               transformMessage(newMessage),
-//             ].sort(sortMessagesByTimestamp);
-//           }
-//         },
-//         error: (err) => {
-//           console.error("WebSocket subscription error:", err);
-//         },
-//         complete: () => {
-//           console.log("Subscription completed");
-//         },
-//       }
-//   );
-// };
-
-// Cleanup WebSocket subscription
-// const cleanupSubscription = () => {
-//   if (subscriptionDisposeFn) {
-//     subscriptionDisposeFn();
-//     subscriptionDisposeFn = null;
-//   }
-//   if (subscriptionClient) {
-//     subscriptionClient.dispose();
-//     subscriptionClient = null;
-//   }
-// };
-
-// Hook into lifecycle events
 onMounted(async () => {
   await fetchMessages();
-  //setupMessageSubscription();
 });
 
-// onUnmounted(() => {
-//   cleanupSubscription();
-// });
 </script>
-
 <template>
   <div class="app-container">
     <Header
