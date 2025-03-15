@@ -34,14 +34,18 @@ const fetchMessages = async () => {
   try {
     loading.value = true;
 
-    const response = await axios.post(graphqlEndpoint, {
-      query: GET_MESSAGES,
-    },
+    const response = await axios.post(
+        graphqlEndpoint,
+        {
+          query: GET_MESSAGES,
+        },
         {
           headers: {
             "x-api-key": apiKey,
+            "Content-Type": "application/json", // Ensure proper content type
           },
-    });
+        }
+    );
     const fetchedMessages = response?.data?.data?.getMessages || [];
     messages.value = fetchedMessages
         .filter((msg) => msg?.MessageId && msg?.ReceivedAt && msg?.MessageBody)
@@ -85,7 +89,6 @@ onMounted(async () => {
         :mark-as-read="markAsRead"
     />
     <div class="main-content">
-      <!-- Additional content goes here -->
     </div>
   </div>
 </template>
