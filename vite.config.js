@@ -6,7 +6,8 @@ export default defineConfig({
   resolve: {
     alias: {
       './runtimeConfig': './runtimeConfig.browser',
-      '@': '/src'  // Add this if you're using path aliases
+      '@': '/src',
+      "aws-amplify": "/node_modules/aws-amplify"
     }
   },
   define: {

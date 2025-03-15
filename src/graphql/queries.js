@@ -1,7 +1,7 @@
 // graphql/queries.js
 export const GET_MESSAGES = `
-  query GetMessages {
-    getMessages {
+  query GetMessages($limit: Number){
+    getMessages(limit: $limit){
       MessageId
       ReceivedAt
       isRead
