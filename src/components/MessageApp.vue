@@ -1,3 +1,15 @@
+<template>
+  <div class="app-container">
+    <Header
+        :messages="messages"
+        :loading="loading"
+        :unread-count="unreadCount"
+        :mark-as-read="markAsRead"
+    />
+    <div class="main-content"></div>
+  </div>
+</template>
+
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import axios from "axios";
@@ -5,17 +17,20 @@ import Header from "./MessageHeader.vue";
 import { GET_MESSAGES, UPDATE_MESSAGE_READ_STATUS } from "../graphql/queries";
 import { sortMessagesByTimestamp } from "../utils/messageHelpers";
 
+// API keys and endpoints
 const apiKey = import.meta.env.VITE_API_KEY;
-const graphqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT; // For HTTP POST
+const graphqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
 
+// State
 const messages = ref([]);
 const loading = ref(true);
 
+// Computed: Count unread messages
 const unreadCount = computed(() =>
     messages.value.filter((message) => !message.isRead).length
 );
 
-// Transform function: Optimizes fetched and incoming messages
+// Helper: Transform fetched/incoming messages to standard format
 const transformMessage = (msg) => ({
   MessageId: msg.MessageId,
   ReceivedAt: msg.ReceivedAt,
@@ -30,10 +45,10 @@ const transformMessage = (msg) => ({
     timestamp: msg?.MessageBody?.timestamp || msg?.ReceivedAt,
   },
 });
+
 const fetchMessages = async () => {
   try {
     loading.value = true;
-
     const response = await axios.post(
         graphqlEndpoint,
         {
@@ -42,11 +57,14 @@ const fetchMessages = async () => {
         {
           headers: {
             "x-api-key": apiKey,
-            "Content-Type": "application/json", // Ensure proper content type
+            "Content-Type": "application/json",
           },
         }
     );
-    const fetchedMessages = response?.data?.data?.getMessages || [];
+    const fetchedMessages = Array.isArray(response?.data?.data?.getMessages)
+        ? response.data.data.getMessages
+        : [];
+
     messages.value = fetchedMessages
         .filter((msg) => msg?.MessageId && msg?.ReceivedAt && msg?.MessageBody)
         .map(transformMessage)
@@ -59,6 +77,8 @@ const fetchMessages = async () => {
     loading.value = false;
   }
 };
+
+// Mark message as read
 const markAsRead = async (messageId) => {
   try {
     await axios.post(graphqlEndpoint, {
@@ -66,32 +86,18 @@ const markAsRead = async (messageId) => {
       variables: { input: { MessageId: messageId, isRead: true } },
     });
 
-    // Update local state
+    // Update the local state
     messages.value = messages.value.map((msg) =>
         msg.MessageId === messageId ? { ...msg, isRead: true } : msg
     );
-
   } catch (error) {
     console.error("Error marking message as read:", error);
   }
 };
-onMounted(async () => {
-  await fetchMessages();
-});
 
+// Fetch messages on component mount
+onMounted(fetchMessages);
 </script>
-<template>
-  <div class="app-container">
-    <Header
-        :messages="messages"
-        :loading="loading"
-        :unread-count="unreadCount"
-        :mark-as-read="markAsRead"
-    />
-    <div class="main-content">
-    </div>
-  </div>
-</template>
 
 <style scoped>
 .app-container {
