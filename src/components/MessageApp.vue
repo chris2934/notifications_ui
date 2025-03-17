@@ -14,7 +14,7 @@
 import { ref, computed, onMounted } from "vue";
 import axios from "axios";
 import Header from "./MessageHeader.vue";
-import { GET_MESSAGES, UPDATE_MESSAGE_READ_STATUS } from "../graphql/queries";
+import { GET_MESSAGES } from "../graphql/queries";
 import { sortMessagesByTimestamp } from "../utils/messageHelpers";
 
 // API keys and endpoints
@@ -75,37 +75,6 @@ const fetchMessages = async () => {
     messages.value = [];
   } finally {
     loading.value = false;
-  }
-};
-
-// Mark message as read
-const markAsRead = async (messageId) => {
-  try {
-    const response = await axios.post(
-        graphqlEndpoint,
-        JSON.stringify({
-          query: UPDATE_MESSAGE_READ_STATUS,
-          variables: { input: { MessageId: messageId, isRead: true } },
-        }),
-        {
-          headers: {
-            "x-api-key": apiKey,
-            "Content-Type": "application/json",
-          },
-        }
-    );
-
-    if (response.data?.errors) {
-      console.error("GraphQL error:", response.data.errors);
-      return;
-    }
-
-    // Update the local state
-    messages.value = messages.value.map((msg) =>
-        msg.MessageId === messageId ? { ...msg, isRead: true } : msg
-    );
-  } catch (error) {
-    console.error("Error marking message as read:", error);
   }
 };
 
