@@ -4,7 +4,7 @@
     <div v-else-if="!messages.length && !loading" class="no-messages">No messages yet</div>
     <div v-else class="messages-container">
       <div
-          v-for="message in messages"
+          v-for="message in [...messages].sort((a, b) => new Date(b.ReceivedAt) - new Date(a.ReceivedAt))"
           :key="message.MessageId"
           class="message-wrapper"
           :class="{ 'unread': !message.isRead, 'read': message.isRead }"
