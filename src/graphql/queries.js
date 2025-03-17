@@ -18,24 +18,6 @@ export const GET_MESSAGES = `
   }
 `
 
-export const SEND_MESSAGE_MUTATION = `
-  mutation SendMessage($input: SendMessageInput!) {
-    sendMessage(input: $input) {
-      MessageId
-      ReceivedAt
-      MessageBody {
-        content
-        metadata {
-          type
-          version
-        }
-        status
-        timestamp
-      }
-    }
-  }
-`
-
 export const MESSAGE_SUBSCRIPTION = `
   subscription OnNewMessage {
     onNewMessage {
