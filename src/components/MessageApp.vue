@@ -81,10 +81,24 @@ const fetchMessages = async () => {
 // Mark message as read
 const markAsRead = async (messageId) => {
   try {
-    await axios.post(graphqlEndpoint, {
-      query: UPDATE_MESSAGE_READ_STATUS,
-      variables: { input: { MessageId: messageId, isRead: true } },
-    });
+    const response = await axios.post(
+        graphqlEndpoint,
+        JSON.stringify({
+          query: UPDATE_MESSAGE_READ_STATUS,
+          variables: { input: { MessageId: messageId, isRead: true } },
+        }),
+        {
+          headers: {
+            "x-api-key": apiKey,
+            "Content-Type": "application/json",
+          },
+        }
+    );
+
+    if (response.data?.errors) {
+      console.error("GraphQL error:", response.data.errors);
+      return;
+    }
 
     // Update the local state
     messages.value = messages.value.map((msg) =>
