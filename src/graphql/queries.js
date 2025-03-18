@@ -36,21 +36,12 @@ export const MESSAGE_SUBSCRIPTION = `
   }
 `
 export const UPDATE_MESSAGE_READ_STATUS = `
-  mutation UpdateMessageReadStatus($input: UpdateMessageInput!) {
-    updateMessage(input: $input) {
-      MessageId
-      ReceivedAt
-      isRead
-      MessageBody {
-        content
-        metadata {
-          type
-          version
-        }
-        status
-        timestamp
-      }
-    }
+  mutation UpdateMessage($input: UpdateMessageInput!) {
+  updateMessage(input: $input) {
+    MessageId
+    ReceivedAt
+    isRead
   }
+}
 `
 

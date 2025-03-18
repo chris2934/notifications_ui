@@ -20,7 +20,7 @@
                 :messages="messages"
                 :loading="loading"
                 @mark-as-read="handleMarkAsRead"
-            />
+             fetch-more-messages=""/>
           </div>
         </div>
       </div>

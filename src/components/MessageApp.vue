@@ -76,7 +76,7 @@ const fetchMessages = async () => {
   } finally {
     loading.value = false;
   }
-};
+}
 
 // Fetch messages on component mount
 onMounted(fetchMessages);
