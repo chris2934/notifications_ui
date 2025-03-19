@@ -24,9 +24,11 @@
     "graphql-tag": "^2.12.6",
     "graphql-ws": "^6.0.4",
     "material-symbols": "^0.28.2",
+    "subscriptions-transport-ws": "^0.11.0",
     "vite-plugin-commonjs": "^0.10.4",
     "vue": "^3.5.13",
-    "vue-router": "^4.5.0"
+    "vue-router": "^4.5.0",
+    "ws": "^8.18.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",

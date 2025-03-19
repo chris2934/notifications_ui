@@ -1,10 +1,10 @@
 <template>
   <div class="message-list" ref="messageList">
-    <div v-if="loading && !messages.length" class="loading">Loading messages...</div>
-    <div v-else-if="!messages.length && !loading" class="no-messages">No messages yet</div>
+    <div v-if="loading && !localMessages.length" class="loading">Loading messages...</div>
+    <div v-else-if="!localMessages.length && !loading" class="no-messages">No messages yet</div>
     <div v-else class="messages-container">
       <div
-          v-for="message in [...messages].sort((a, b) => new Date(b.ReceivedAt) - new Date(a.ReceivedAt))"
+          v-for="message in [...localMessages].sort((a, b) => new Date(b.ReceivedAt) - new Date(a.ReceivedAt))"
           :key="message.MessageId"
           class="message-wrapper"
           :class="{ 'unread': !message.isRead, 'read': message.isRead }"
@@ -23,86 +23,120 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
-import MessageItem from './MessageItem.vue'
-import { generateClient } from 'aws-amplify/api'
-import { UPDATE_MESSAGE_READ_STATUS } from '@/graphql/queries.js'
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import MessageItem from './MessageItem.vue';
+import subscribeToMessages from '../graphql/subscriptionClient';
+import { generateClient } from 'aws-amplify/api';
+import { UPDATE_MESSAGE_READ_STATUS } from '@/graphql/queries.js';
 
-const client = generateClient()
+const client = generateClient();
 
-defineProps({
+// Props
+const { messages, fetchMoreMessages, loading } = defineProps({
   messages: {
     type: Array,
-    required: true
+    required: true,
   },
   loading: {
     type: Boolean,
-    default: false
+    default: false,
   },
   fetchMoreMessages: {
     type: Function,
-    required: true // A function to fetch more messages when needed
-  }
-})
+    required: true, // A function to fetch more messages when needed
+  },
+});
 
-// Refs for infinite scroll
-const sentinel = ref(null)
-const intersectionObserver = ref(null)
-const loadingMore = ref(false)
+// Refs
+const sentinel = ref(null);
+const intersectionObserver = ref(null);
+const loadingMore = ref(false);
+const subscriptionCleanup = ref(null); // To store the unsubscribe function for cleanup
 
+// Local state: Copy of props.messages for reactive updates
+const localMessages = ref([...messages]); // Start with a copy of messages
+
+// Watch messages prop and synchronize with localMessages
+watch(
+    () => messages,
+    (newMessages) => {
+      localMessages.value = [...newMessages]; // Sync localMessages with incoming data
+    }
+);
+
+// Mark a message as read
 const markAsRead = async (message) => {
-  if (message.isRead) return
+  if (message.isRead) return;
   try {
-    const response = await client.graphql({
+    // Update message read status via API
+    await client.graphql({
       query: UPDATE_MESSAGE_READ_STATUS,
       variables: {
         input: {
           MessageId: message.MessageId,
           isRead: true,
-          ReceivedAt: message.ReceivedAt // Include this if you have it
-        }
-      }
-    })
-    message.isRead = true
+          ReceivedAt: message.ReceivedAt, // Include if available
+        },
+      },
+    });
+    // Update message status locally
+    message.isRead = true;
   } catch (error) {
-    console.error('Error marking message as read:', error)
+    console.error('Error marking message as read:', error);
   }
-}
+};
 
-// Fetch more messages when scroll reaches the bottom
+// Fetch more messages when the scroll reaches the bottom
 const handleIntersection = async (entries) => {
-  const [entry] = entries
+  const [entry] = entries;
   if (entry.isIntersecting && !loadingMore.value) {
     try {
-      loadingMore.value = true
-      await props.fetchMoreMessages() // Fetch data and append to the list outside this component
+      loadingMore.value = true;
+      await fetchMoreMessages(); // Fetch more messages
     } catch (error) {
-      console.error('Error fetching more messages:', error)
+      console.error('Error fetching more messages:', error);
     } finally {
-      loadingMore.value = false
+      loadingMore.value = false;
     }
   }
-}
+};
 
-// Initialize IntersectionObserver
+// Initialize subscription and IntersectionObserver
 onMounted(() => {
+  // Subscribe to new messages
+  subscriptionCleanup.value = subscribeToMessages((newMessage) => {
+    // Add incoming unique messages to the top of localMessages
+    if (!localMessages.value.some((msg) => msg.MessageId === newMessage.MessageId)) {
+      localMessages.value.unshift(newMessage);
+    }
+  });
+
+  // Setup IntersectionObserver for infinite scrolling
   if (sentinel.value) {
     intersectionObserver.value = new IntersectionObserver(handleIntersection, {
       root: null, // Default: viewport
       rootMargin: '0px',
-      threshold: 1.0 // Trigger when the sentinel is fully visible
-    })
-    intersectionObserver.value.observe(sentinel.value)
+      threshold: 1.0, // Trigger when the sentinel is fully visible
+    });
+    intersectionObserver.value.observe(sentinel.value);
   }
-})
+});
 
-// Cleanup on unmount
+// Cleanup on component unmount
 onUnmounted(() => {
-  if (intersectionObserver.value && sentinel.value) {
-    intersectionObserver.value.unobserve(sentinel.value)
-    intersectionObserver.value.disconnect()
+  // Unsubscribe from subscription
+  if (subscriptionCleanup.value) {
+    subscriptionCleanup.value.unsubscribe();
   }
-})
+
+  // Cleanup and disconnect IntersectionObserver
+  if (intersectionObserver.value) {
+    if (sentinel.value) {
+      intersectionObserver.value.unobserve(sentinel.value);
+    }
+    intersectionObserver.value.disconnect();
+  }
+});
 </script>
 
 <style scoped>
@@ -112,7 +146,8 @@ onUnmounted(() => {
   background: transparent;
 }
 
-.loading, .no-messages {
+.loading,
+.no-messages {
   text-align: center;
   padding: 20px;
   color: #666;

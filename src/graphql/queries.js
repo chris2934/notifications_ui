@@ -19,10 +19,11 @@ export const GET_MESSAGES = `
 `
 
 export const MESSAGE_SUBSCRIPTION = `
-  subscription OnNewMessage {
+  subscription onNewMessage {
     onNewMessage {
       MessageId
       ReceivedAt
+      isRead
       MessageBody {
         content
         metadata {

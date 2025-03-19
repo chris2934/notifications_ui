@@ -5,6 +5,7 @@ import '@fontsource/material-symbols-outlined';
 import 'material-symbols';
 import router from './router';
 import awsExports from "./aws-exports";
+import client from "@/graphql/subscriptionClient";
 
 
 // Correct Amplify Configuration
@@ -30,5 +31,6 @@ try {
 
 // Create and mount the Vue app
 const app = createApp(App);
+app.config.globalProperties.$wsClient = client;
 app.use(router);
 app.mount('#app');
