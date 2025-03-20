@@ -1,20 +1,22 @@
 import { createClient } from 'graphql-ws';
-import gql from 'graphql-tag';
 import {MESSAGE_SUBSCRIPTION} from "@/graphql/queries.js";
 
 // Define your WebSocket client
 const client = createClient({
-    url: 'wss://your-graphql-endpoint.com/graphql', // Replace with your WebSocket URL
+    url: import.meta.env.VITE_GRAPHQL_WS_ENDPOINT,
+    connectionParams: {
+        headers: {
+            "x-api-key": import.meta.env.VITE_GRAPHQL_AUTH_TOKEN
+        },
+    },
 });
 
-// Function to subscribe to new messages
 export default function subscribeToMessages(callback) {
     // Ensure the callback is provided
     if (typeof callback !== 'function') {
         throw new Error('A callback function is required for message subscription.');
     }
 
-    // Start the subscription
     const unsubscribe = client.subscribe(
         {
             query: MESSAGE_SUBSCRIPTION, // GraphQL subscription query
@@ -36,7 +38,6 @@ export default function subscribeToMessages(callback) {
         }
     );
 
-    // Return the unsubscribe function
     return {
         unsubscribe: () => {
             unsubscribe();
