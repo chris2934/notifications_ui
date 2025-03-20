@@ -1,27 +1,36 @@
-import {createApp} from 'vue'
-import App from './App.vue'
-import {Amplify} from 'aws-amplify'
-import '@fontsource/material-symbols-outlined'
-import 'material-symbols'
-import router from './router'
+import { createApp } from 'vue';
+import App from './App.vue';
+import { Amplify } from 'aws-amplify';
+import '@fontsource/material-symbols-outlined';
+import 'material-symbols';
+import router from './router';
+import awsExports from "./aws-exports";
+import client from "@/graphql/subscriptionClient";
 
-Amplify.configure({
-    Auth: {
-        Cognito: {
-            userPoolId: 'us-east-1_pgNeEhS3I',
-            userPoolClientId: import.meta.env.VITE_AWS_USER_POOL_CLIENT_ID,
-            region: 'us-east-1'
-        }
-    },
+
+// Correct Amplify Configuration
+const amplifyConfig = {
     API: {
-        GraphQL: {
-            endpoint: import.meta.env.VITE_APPSYNC_API_URL,
-            region: 'us-east-1',
-            defaultAuthMode: 'userPool'
-        }
+        aws_appsync_graphqlEndpoint: 'https://ztjvnzn4pvddjmiufzjlhs7rhi.appsync-api.us-east-1.amazonaws.com/graphql',
+        aws_appsync_region: 'us-east-1',
+        aws_appsync_authenticationType: 'API_KEY',
+        aws_appsync_apiKey: 'da2-auztuvrhxzbvdi6fhoztqilst4',
     }
-})
+};
 
-const app = createApp(App)
-app.use(router)
-app.mount('#app')
+// Debugging to check configuration values
+console.log('[DEBUG] Amplify Configuration:', amplifyConfig);
+
+// Configure Amplify
+try {
+    Amplify.configure(awsExports);
+    console.log('[DEBUG] Amplify successfully configured');
+} catch (error) {
+    console.error('[ERROR] Amplify configuration failed:', error);
+}
+
+// Create and mount the Vue app
+const app = createApp(App);
+app.config.globalProperties.$wsClient = client;
+app.use(router);
+app.mount('#app');

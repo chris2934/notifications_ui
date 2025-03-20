@@ -18,29 +18,12 @@ export const GET_MESSAGES = `
   }
 `
 
-export const SEND_MESSAGE_MUTATION = `
-  mutation SendMessage($input: SendMessageInput!) {
-    sendMessage(input: $input) {
-      MessageId
-      ReceivedAt
-      MessageBody {
-        content
-        metadata {
-          type
-          version
-        }
-        status
-        timestamp
-      }
-    }
-  }
-`
-
 export const MESSAGE_SUBSCRIPTION = `
-  subscription OnNewMessage {
+  subscription onNewMessage {
     onNewMessage {
       MessageId
       ReceivedAt
+      isRead
       MessageBody {
         content
         metadata {
@@ -54,20 +37,12 @@ export const MESSAGE_SUBSCRIPTION = `
   }
 `
 export const UPDATE_MESSAGE_READ_STATUS = `
-    mutation UpdateMessageReadStatus($input: UpdateMessageInput!) {
-        updateMessage(input: $input) {
-            MessageId
-            isRead
-            ReceivedAt
-            MessageBody {
-                content
-                metadata {
-                    type
-                    version
-                }
-                status
-                timestamp
-            }
-        }
-    }
+  mutation UpdateMessage($input: UpdateMessageInput!) {
+  updateMessage(input: $input) {
+    MessageId
+    ReceivedAt
+    isRead
+  }
+}
 `
+

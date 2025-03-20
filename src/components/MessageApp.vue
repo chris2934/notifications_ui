@@ -6,137 +6,80 @@
         :unread-count="unreadCount"
         :mark-as-read="markAsRead"
     />
-    <div class="main-content">
-      <!-- Removed MessageInput and its send-related functionality -->
-    </div>
+    <div class="main-content"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { generateClient } from 'aws-amplify/api'
-import Header from './MessageHeader.vue'
-import {
-  GET_MESSAGES,
-  MESSAGE_SUBSCRIPTION,
-  UPDATE_MESSAGE_READ_STATUS
-} from '../graphql/queries'
-import { formatTimestamp, sortMessagesByTimestamp } from '../utils/messageHelpers'
+import { ref, computed, onMounted } from "vue";
+import axios from "axios";
+import Header from "./MessageHeader.vue";
+import { GET_MESSAGES } from "../graphql/queries";
+import { sortMessagesByTimestamp } from "../utils/messageHelpers";
+
+// API keys and endpoints
+const apiKey = import.meta.env.VITE_API_KEY;
+const graphqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
 
 // State
-const messages = ref([])
-const loading = ref(true)
-let subscription = null
+const messages = ref([]);
+const loading = ref(true);
 
-// Computed property for unread messages count
+// Computed: Count unread messages
 const unreadCount = computed(() =>
-    messages.value.filter(message => !message.isRead).length
-)
+    messages.value.filter((message) => !message.isRead).length
+);
 
-// Client setup
-const client = generateClient({
-  authMode: 'userPool',
-  disableStorage: true,
-})
-
-// Helper to transform messages
+// Helper: Transform fetched/incoming messages to standard format
 const transformMessage = (msg) => ({
   MessageId: msg.MessageId,
   ReceivedAt: msg.ReceivedAt,
   isRead: msg.isRead || false,
   MessageBody: {
-    content: msg.MessageBody.content || '',
+    content: msg?.MessageBody?.content || "",
     metadata: {
-      type: msg.MessageBody.metadata?.type || 'NOTIFICATION',
-      version: msg.MessageBody.metadata?.version || '1.0'
+      type: msg?.MessageBody?.metadata?.type || "NOTIFICATION",
+      version: msg?.MessageBody?.metadata?.version || "1.0",
     },
-    status: msg.MessageBody.status || 'UNKNOWN',
-    timestamp: msg.MessageBody.timestamp || msg.ReceivedAt
-  }
-})
+    status: msg?.MessageBody?.status || "UNKNOWN",
+    timestamp: msg?.MessageBody?.timestamp || msg?.ReceivedAt,
+  },
+});
 
-// Function to mark a message as read
-const markAsRead = async (messageId) => {
-  try {
-    await client.graphql({
-      query: UPDATE_MESSAGE_READ_STATUS,
-      variables: {
-        input: {
-          MessageId: messageId,
-          isRead: true
-        }
-      }
-    })
-
-    // Update local state
-    messages.value = messages.value.map(msg =>
-        msg.MessageId === messageId
-            ? { ...msg, isRead: true }
-            : msg
-    )
-  } catch (error) {
-    console.error('Error marking message as read:', error)
-  }
-}
-
-// Fetch messages
 const fetchMessages = async () => {
   try {
-    loading.value = true
-    const response = await client.graphql({
-      query: GET_MESSAGES,
-      authMode: 'userPool',
-    })
-    const fetchedMessages = response.data?.getMessages || []
+    loading.value = true;
+    const response = await axios.post(
+        graphqlEndpoint,
+        {
+          query: GET_MESSAGES,
+        },
+        {
+          headers: {
+            "x-api-key": apiKey,
+            "Content-Type": "application/json",
+          },
+        }
+    );
+    const fetchedMessages = Array.isArray(response?.data?.data?.getMessages)
+        ? response.data.data.getMessages
+        : [];
+
     messages.value = fetchedMessages
-        .filter(msg => msg?.MessageId && msg?.ReceivedAt && msg?.MessageBody)
+        .filter((msg) => msg?.MessageId && msg?.ReceivedAt && msg?.MessageBody)
         .map(transformMessage)
-        .sort(sortMessagesByTimestamp)
+        .sort(sortMessagesByTimestamp);
 
   } catch (error) {
-    console.error('Error fetching messages:', error)
-    messages.value = []
+    console.error("Error fetching messages:", error);
+    messages.value = [];
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
-// Set up subscription to new messages
-const setupMessageSubscription = () => {
-  subscription = client.graphql({
-    query: MESSAGE_SUBSCRIPTION
-  }).subscribe({
-    next: ({ data }) => {
-      if (data?.onNewMessage) {
-        messages.value = [
-          ...messages.value,
-          transformMessage(data.onNewMessage)
-        ].sort(sortMessagesByTimestamp)
-      }
-    },
-    error: (error) => console.error('Subscription error:', error)
-  })
-}
-
-// Lifecycle hooks
-onMounted(async () => {
-  await fetchMessages()
-  setupMessageSubscription()
-})
-
-onUnmounted(() => {
-  if (subscription) {
-    subscription.unsubscribe()
-    subscription = null
-  }
-})
-
-// Expose necessary methods and reactive references
-defineExpose({
-  messages,
-  loading,
-  fetchMessages
-})
+// Fetch messages on component mount
+onMounted(fetchMessages);
 </script>
 
 <style scoped>
@@ -145,7 +88,7 @@ defineExpose({
   margin: 0 auto;
   padding: 20px;
   height: 100vh;
-  overflow: hidden
+  overflow: hidden;
 }
 
 .main-content {
