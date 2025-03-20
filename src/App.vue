@@ -5,24 +5,8 @@
 </template>
 
 <script setup>
-import {ref} from 'vue'
-import {getCurrentUser} from 'aws-amplify/auth'
 import { onMounted } from 'vue'
-
-const isAuthenticated = ref(false)
-
-const checkAuthState = async () => {
-  try {
-    await getCurrentUser()
-    isAuthenticated.value = true
-  } catch (error) {
-    isAuthenticated.value = false
-  }
-}
-
-
 onMounted(() => {
-  checkAuthState()
   document.title = 'Notifications'
 })
 </script>
