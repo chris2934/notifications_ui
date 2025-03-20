@@ -14,9 +14,6 @@ console.log('[DEBUG] Amplify Configuration from aws-exports:', awsExports);
 Amplify.configure({}); // Clear any old configuration
 Amplify.configure(awsExports);
 
-// Confirm that the config has been applied
-console.log('[DEBUG] Amplify Resolved Config:', JSON.stringify((Amplify as any)._config, null, 2));
-
 // Create and mount the Vue app
 const app = createApp(App);
 app.config.globalProperties.$wsClient = client;
