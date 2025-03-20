@@ -1,11 +1,14 @@
 <template>
   <div id="app">
-    <router-view></router-view>
+    <MessageApp />
   </div>
 </template>
 
+
 <script setup>
 import { onMounted } from 'vue'
+import MessageApp from './components/MessageApp.vue';
+
 onMounted(() => {
   document.title = 'Notifications'
 })
