@@ -30,6 +30,14 @@ const unreadCount = computed(() =>
     messages.value.filter((message) => !message.isRead).length
 );
 
+const markAsRead = (messageId) => {
+  const message = messages.value.find((msg) => msg.MessageId === messageId);
+  if (message) {
+    message.isRead = true;
+  }
+};
+
+
 // Helper: Transform fetched/incoming messages to standard format
 const transformMessage = (msg) => ({
   MessageId: msg.MessageId,

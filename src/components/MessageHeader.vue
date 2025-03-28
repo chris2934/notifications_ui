@@ -20,7 +20,8 @@
                 :messages="messages"
                 :loading="loading"
                 @mark-as-read="handleMarkAsRead"
-             fetch-more-messages=""/>
+                :fetch-more-messages="fetchMoreMessages"
+            />
           </div>
         </div>
       </div>
@@ -43,6 +44,19 @@ const props = defineProps({
     default: false,
   },
 });
+
+// Function to fetch more messages
+const fetchMoreMessages = async () => {
+  try {
+    console.log("Fetching more messages...");
+    // Example: Add your API call or fetching logic here
+    // Simulating fetch delay for example
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    console.log("More messages fetched.");
+  } catch (error) {
+    console.error("Error fetching more messages:", error);
+  }
+};
 
 // Reactive state to track dropdown open/close status
 const isMessageListOpen = ref(true); // Start with dropdown open by default
