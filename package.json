@@ -1,6 +1,6 @@
 {
   "name": "notifications",
-  "version": "1.0.33",
+  "version": "1.0.34",
   "private": true,
   "type": "module",
   "scripts": {
@@ -24,7 +24,6 @@
     "graphql-tag": "^2.12.6",
     "graphql-ws": "^6.0.4",
     "material-symbols": "^0.29.1",
-    "subscriptions-transport-ws": "^0.11.0",
     "vite-plugin-commonjs": "^0.10.4",
     "vue": "^3.5.13",
     "ws": "^8.18.1"
