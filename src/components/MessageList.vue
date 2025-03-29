@@ -87,6 +87,7 @@ const markAsRead = async (message) => {
           isRead: true,
           ReceivedAt: message.ReceivedAt,
         },
+        authMode: "API_KEY",
       },
     });
     message.isRead = true; // Reflect status change locally
