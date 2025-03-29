@@ -1,15 +1,15 @@
 import { createApp } from 'vue';
-import App from './App.vue';
-import { Amplify } from 'aws-amplify'; // Import Amplify
-import '@fontsource/material-symbols-outlined'; // Necessary fonts import
+import { Amplify } from 'aws-amplify'; // Import Amplify first
+import awsExports from './aws-exports'; // Import the configuration file
+
+Amplify.configure(awsExports); // Configure Amplify at the top
+
+import App from './App.vue'; // Import the rest after configuration
+import client from '@/graphql/subscriptionClient';
+import '@fontsource/material-symbols-outlined';
 import 'material-symbols';
-import awsExports from './aws-exports'; // AWS Amplify configuration file
-import client from '@/graphql/subscriptionClient'; // WebSocket client for subscriptions
 
-// Configure Amplify using the aws-exports settings
-Amplify.configure(awsExports);
-
-// Create and mount the Vue app
+// Create and mount the app
 const app = createApp(App);
-app.config.globalProperties.$wsClient = client; // Bind WebSocket client globally
+app.config.globalProperties.$wsClient = client;
 app.mount('#app');
