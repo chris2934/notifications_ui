@@ -25,13 +25,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch, computed } from "vue";
 import MessageItem from "./MessageItem.vue";
-import subscribeToMessages from "../graphql/subscriptionClient";
-import { generateClient } from "aws-amplify/api";
+import subscribeToMessages from "@/graphql/subscriptionClient.js";
 import { UPDATE_MESSAGE_READ_STATUS } from "@/graphql/queries.js";
+import { apolloClient } from "@/graphql/subscriptionClient.js";
 
-const client = generateClient();
 
-// Props
 const { messages, fetchMoreMessages, loading } = defineProps({
   messages: {
     type: Array,
@@ -47,7 +45,6 @@ const { messages, fetchMoreMessages, loading } = defineProps({
   },
 });
 
-// Refs for state
 const sentinel = ref(null);
 const intersectionObserver = ref(null);
 const loadingMore = ref(false);
@@ -75,22 +72,29 @@ watch(
     }
 );
 
-// Mark a message as read
 const markAsRead = async (message) => {
-  if (message.isRead) return; // Skip if already read
+  // Skip if the message is null or already marked as read
+  if (!message || message.isRead) {
+    console.log('Message is either null or already marked as read.');
+    return;
+  }
+
   try {
-    await client.graphql({
-      query: UPDATE_MESSAGE_READ_STATUS,
+    // Pass the mutation and variables to the client
+    const response = await apolloClient.mutate({
+      mutation: UPDATE_MESSAGE_READ_STATUS, // "query" is fine too, but "mutation" is more descriptive
       variables: {
         input: {
           MessageId: message.MessageId,
           isRead: true,
-          ReceivedAt: message.ReceivedAt,
+          ReceivedAt: message.ReceivedAt, // Optional based on backend requirements
         },
-        authMode: "API_KEY",
       },
     });
-    message.isRead = true; // Reflect status change locally
+
+    message.isRead = true;
+    console.log("Successfully marked message as read:", response);
+
   } catch (err) {
     console.error("Error marking message as read:", err);
   }

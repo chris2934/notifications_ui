@@ -1,4 +1,5 @@
-// graphql/queries.js
+import { gql } from '@apollo/client';
+
 export const GET_MESSAGES = `
   query GetMessages {
     getMessages {
@@ -36,13 +37,14 @@ export const MESSAGE_SUBSCRIPTION = `
     }
   }
 `
-export const UPDATE_MESSAGE_READ_STATUS = `
-  mutation UpdateMessage($input: UpdateMessageInput!) {
-  updateMessage(input: $input) {
-    MessageId
-    ReceivedAt
-    isRead
-  }
-}
-`
+export const UPDATE_MESSAGE_READ_STATUS = gql`
+    mutation UpdateMessage($input: UpdateMessageInput!) {
+        updateMessage(input: $input) {
+            MessageId
+            ReceivedAt
+            isRead
+        }
+    }
+`;
+
 

@@ -1,11 +1,11 @@
 import { createApp } from 'vue';
-import { Amplify } from 'aws-amplify'; // Import Amplify first
-import awsExports from './aws-exports'; // Import the configuration file
+import { Amplify } from 'aws-amplify';
+import awsconfig from './aws-exports';
 
-Amplify.configure(awsExports); // Configure Amplify at the top
+Amplify.configure(awsconfig);
 
-import App from './App.vue'; // Import the rest after configuration
-import client from '@/graphql/subscriptionClient';
+import App from './App.vue';
+import client from '@/graphql/subscriptionClient.js';
 import '@fontsource/material-symbols-outlined';
 import 'material-symbols';
 
