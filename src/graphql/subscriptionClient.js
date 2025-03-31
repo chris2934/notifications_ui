@@ -1,13 +1,23 @@
 import { createClient } from 'graphql-ws';
-import {MESSAGE_SUBSCRIPTION} from "@/graphql/queries.js";
+import { MESSAGE_SUBSCRIPTION, UPDATE_MESSAGE_READ_STATUS } from "@/graphql/queries.js";
+import { gql, ApolloClient, InMemoryCache } from '@apollo/client';
 
 // Define your WebSocket client
-const client = createClient({
+export const client = createClient({
     url: import.meta.env.VITE_GRAPHQL_WS_ENDPOINT,
     connectionParams: {
         headers: {
-            "x-api-key": import.meta.env.VITE_GRAPHQL_AUTH_TOKEN
+            "x-api-key": import.meta.env.VITE_GRAPHQL_AUTH_TOKEN,
         },
+    },
+});
+
+// Apollo Client for handling the mutation
+export const apolloClient = new ApolloClient({
+    uri: import.meta.env.VITE_GRAPHQL_ENDPOINT, // HTTP endpoint for mutations/queries
+    cache: new InMemoryCache(),
+    headers: {
+        "x-api-key": import.meta.env.VITE_GRAPHQL_AUTH_TOKEN,
     },
 });
 
@@ -24,7 +34,13 @@ export default function subscribeToMessages(callback) {
         {
             next: (data) => {
                 if (data?.data?.onNewMessage) {
-                    callback(data.data.onNewMessage); // Pass the new message to the callback
+                    const newMessage = data.data.onNewMessage;
+
+                    // Trigger the callback with the new message
+                    callback(newMessage);
+
+                    // Optionally, automatically mark the message as read
+                    markMessageAsRead(newMessage);
                 } else {
                     console.warn('No message received in subscription payload:', data);
                 }
@@ -44,4 +60,30 @@ export default function subscribeToMessages(callback) {
             console.log('Unsubscribed from messages.');
         },
     };
+}
+
+// Mark message as read using Apollo's client mutation
+function markMessageAsRead(message) {
+    if (!message?.MessageId || !message?.ReceivedAt) {
+        console.error('MessageId or ReceivedAt is missing. Cannot mark the message as read.');
+        return;
+    }
+
+    apolloClient
+        .mutate({
+            mutation: UPDATE_MESSAGE_READ_STATUS,
+            variables: {
+                input: {
+                    MessageId: message.MessageId,
+                    ReceivedAt: message.ReceivedAt,
+                    isRead: true,
+                },
+            },
+        })
+        .then((result) => {
+            console.log('Message successfully marked as read:', result.data.updateMessage);
+        })
+        .catch((error) => {
+            console.error('Failed to mark message as read:', error);
+        });
 }
