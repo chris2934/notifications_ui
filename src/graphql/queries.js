@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql } from "@apollo/client"
 
 export const GET_MESSAGES = `
   query GetMessages {
@@ -38,13 +38,11 @@ export const MESSAGE_SUBSCRIPTION = `
   }
 `
 export const UPDATE_MESSAGE_READ_STATUS = gql`
-    mutation UpdateMessage($input: UpdateMessageInput!) {
-        updateMessage(input: $input) {
-            MessageId
-            ReceivedAt
-            isRead
-        }
+  mutation UpdateMessage($input: UpdateMessageInput!) {
+    updateMessage(input: $input) {
+      MessageId
+      ReceivedAt
+      isRead
     }
-`;
-
-
+  }
+`

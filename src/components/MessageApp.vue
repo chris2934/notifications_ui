@@ -1,42 +1,41 @@
 <template>
   <div class="app-container">
     <Header
-        :messages="messages"
-        :loading="loading"
-        :unread-count="unreadCount"
-        :mark-as-read="markAsRead"
+      :messages="messages"
+      :loading="loading"
+      :unread-count="unreadCount"
+      :mark-as-read="markAsRead"
     />
     <div class="main-content"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import axios from "axios";
-import Header from "./MessageHeader.vue";
-import { GET_MESSAGES } from "../graphql/queries";
-import { sortMessagesByTimestamp } from "../utils/messageHelpers";
+import { ref, computed, onMounted } from "vue"
+import axios from "axios"
+import Header from "./MessageHeader.vue"
+import { GET_MESSAGES } from "../graphql/queries"
+import { sortMessagesByTimestamp } from "../utils/messageHelpers"
 
 // API keys and endpoints
-const apiKey = import.meta.env.VITE_API_KEY;
-const graphqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT;
+const apiKey = import.meta.env.VITE_API_KEY
+const graphqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT
 
 // State
-const messages = ref([]);
-const loading = ref(true);
+const messages = ref([])
+const loading = ref(true)
 
 // Computed: Count unread messages
-const unreadCount = computed(() =>
-    messages.value.filter((message) => !message.isRead).length
-);
+const unreadCount = computed(
+  () => messages.value.filter((message) => !message.isRead).length,
+)
 
 const markAsRead = (messageId) => {
-  const message = messages.value.find((msg) => msg.MessageId === messageId);
+  const message = messages.value.find((msg) => msg.MessageId === messageId)
   if (message) {
-    message.isRead = true;
+    message.isRead = true
   }
-};
-
+}
 
 // Helper: Transform fetched/incoming messages to standard format
 const transformMessage = (msg) => ({
@@ -52,42 +51,41 @@ const transformMessage = (msg) => ({
     status: msg?.MessageBody?.status || "UNKNOWN",
     timestamp: msg?.MessageBody?.timestamp || msg?.ReceivedAt,
   },
-});
+})
 
 const fetchMessages = async () => {
   try {
-    loading.value = true;
+    loading.value = true
     const response = await axios.post(
-        graphqlEndpoint,
-        {
-          query: GET_MESSAGES,
+      graphqlEndpoint,
+      {
+        query: GET_MESSAGES,
+      },
+      {
+        headers: {
+          "x-api-key": apiKey,
+          "Content-Type": "application/json",
         },
-        {
-          headers: {
-            "x-api-key": apiKey,
-            "Content-Type": "application/json",
-          },
-        }
-    );
+      },
+    )
     const fetchedMessages = Array.isArray(response?.data?.data?.getMessages)
-        ? response.data.data.getMessages
-        : [];
+      ? response.data.data.getMessages
+      : []
 
     messages.value = fetchedMessages
-        .filter((msg) => msg?.MessageId && msg?.ReceivedAt && msg?.MessageBody)
-        .map(transformMessage)
-        .sort(sortMessagesByTimestamp);
-
+      .filter((msg) => msg?.MessageId && msg?.ReceivedAt && msg?.MessageBody)
+      .map(transformMessage)
+      .sort(sortMessagesByTimestamp)
   } catch (error) {
-    console.error("Error fetching messages:", error);
-    messages.value = [];
+    console.error("Error fetching messages:", error)
+    messages.value = []
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 // Fetch messages on component mount
-onMounted(fetchMessages);
+onMounted(fetchMessages)
 </script>
 
 <style scoped>

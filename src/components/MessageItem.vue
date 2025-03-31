@@ -15,17 +15,17 @@
 const props = defineProps({
   message: {
     type: Object,
-    required: true
-  }
+    required: true,
+  },
 })
 
 const formatTime = (timestamp) => {
-  if (!timestamp) return 'No time'
+  if (!timestamp) return "No time"
   try {
     return new Date(timestamp).toLocaleTimeString()
   } catch (error) {
-    console.error('Error formatting time:', error)
-    return 'Invalid time'
+    console.error("Error formatting time:", error)
+    return "Invalid time"
   }
 }
 </script>
