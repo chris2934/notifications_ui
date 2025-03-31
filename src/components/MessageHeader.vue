@@ -7,20 +7,20 @@
         <div class="notification-wrapper">
           <div class="notification-icon" @click="toggleMessages($event)">
             <span
-                class="material-symbols-outlined"
-                :style="{ color: unreadCount > 0 ? 'red' : 'black' }"
+              class="material-symbols-outlined"
+              :style="{ color: unreadCount > 0 ? 'red' : 'black' }"
             >
-              {{ unreadCount > 0 ? 'notifications_unread' : 'notifications' }}
+              {{ unreadCount > 0 ? "notifications_unread" : "notifications" }}
             </span>
           </div>
 
           <!-- Message Dropdown -->
           <div v-if="isMessageListOpen" ref="dropdown" class="message-dropdown">
             <MessageList
-                :messages="messages"
-                :loading="loading"
-                @mark-as-read="handleMarkAsRead"
-                :fetch-more-messages="fetchMoreMessages"
+              :messages="messages"
+              :loading="loading"
+              @mark-as-read="handleMarkAsRead"
+              :fetch-more-messages="fetchMoreMessages"
             />
           </div>
         </div>
@@ -29,9 +29,10 @@
   </header>
 </template>
 
+32;
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import MessageList from "./MessageList.vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue"
+import MessageList from "./MessageList.vue"
 
 // Props for the parent component
 const props = defineProps({
@@ -43,83 +44,83 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-});
+})
 
 // Function to fetch more messages
 const fetchMoreMessages = async () => {
   try {
-    console.log("Fetching more messages...");
+    console.log("Fetching more messages...")
     // Example: Add your API call or fetching logic here
     // Simulating fetch delay for example
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log("More messages fetched.");
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    console.log("More messages fetched.")
   } catch (error) {
-    console.error("Error fetching more messages:", error);
+    console.error("Error fetching more messages:", error)
   }
-};
+}
 
 // Reactive state to track dropdown open/close status
-const isMessageListOpen = ref(true); // Start with dropdown open by default
+const isMessageListOpen = ref(true) // Start with dropdown open by default
 
 // Reference to the dropdown menu element
-const dropdown = ref(null);
+const dropdown = ref(null)
 
 // Computed property for unread messages
-const unreadCount = computed(() =>
-    props.messages.filter((message) => !message.isRead).length
-);
+const unreadCount = computed(
+  () => props.messages.filter((message) => !message.isRead).length,
+)
 
 // Toggle the dropdown open/close
 const toggleMessages = (event) => {
-  event.stopPropagation(); // Prevent event from triggering the "outside click" logic
-  isMessageListOpen.value = !isMessageListOpen.value;
+  event.stopPropagation() // Prevent event from triggering the "outside click" logic
+  isMessageListOpen.value = !isMessageListOpen.value
 
   if (isMessageListOpen.value) {
-    addOutsideClickListener();
+    addOutsideClickListener()
   } else {
-    removeOutsideClickListener();
+    removeOutsideClickListener()
   }
-};
+}
 
 // Handle marking messages as read when clicked (inside the dropdown)
 const handleMarkAsRead = (clickedMessage) => {
-  const message = props.messages.find((msg) => msg.id === clickedMessage.id);
-  if (message) message.isRead = true;
-};
+  const message = props.messages.find((msg) => msg.id === clickedMessage.id)
+  if (message) message.isRead = true
+}
 
 // Detect clicks outside the dropdown
 const handleClickOutside = (event) => {
   if (
-      dropdown.value && // Ensure dropdown exists
-      !dropdown.value.contains(event.target) && // Click is outside the dropdown
-      event.target.closest(".notification-icon") === null // Click is NOT on the notification-icon
+    dropdown.value && // Ensure dropdown exists
+    !dropdown.value.contains(event.target) && // Click is outside the dropdown
+    event.target.closest(".notification-icon") === null // Click is NOT on the notification-icon
   ) {
-    isMessageListOpen.value = false;
-    removeOutsideClickListener();
+    isMessageListOpen.value = false
+    removeOutsideClickListener()
   }
-};
+}
 
 // Add the outside click listener
 const addOutsideClickListener = () => {
-  document.addEventListener("mousedown", handleClickOutside);
-};
+  document.addEventListener("mousedown", handleClickOutside)
+}
 
 // Remove the outside click listener
 const removeOutsideClickListener = () => {
-  document.removeEventListener("mousedown", handleClickOutside);
-};
+  document.removeEventListener("mousedown", handleClickOutside)
+}
 
 // Automatically open the dropdown on mount
 onMounted(() => {
   if (isMessageListOpen.value) {
-    addOutsideClickListener();
+    addOutsideClickListener()
   }
-});
+})
 
 // Cleanup listeners when the component is destroyed
 onBeforeUnmount(() => {
-  removeOutsideClickListener();
-});
+  removeOutsideClickListener()
+})
 </script>
 
 <style scoped>
@@ -161,13 +162,19 @@ onBeforeUnmount(() => {
 
 .notification-icon .material-symbols-outlined {
   font-size: 36px; /* Maintain icon size consistency */
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 48;
 }
 
 /* Dropdown Styling */
 .message-dropdown {
   position: absolute;
-  top: calc(100% + 58px); /* Start dropdown directly below the header with a gap */
+  top: calc(
+    100% + 58px
+  ); /* Start dropdown directly below the header with a gap */
   left: 50%; /* Center-align dropdown with the notification icon */
   transform: translateX(-50%);
   width: 300px;
