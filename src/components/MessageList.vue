@@ -1,11 +1,14 @@
 <template>
   <div class="message-list" ref="messageList">
-    <div v-if="loading && !localMessages.length" class="loading">
+    <!-- Loading State -->
+    <div v-if="loading && localMessages.length === 0" class="loading">
       Loading messages...
     </div>
+    <!-- No Messages -->
     <div v-else-if="!localMessages.length && !loading" class="no-messages">
       No messages yet
     </div>
+    <!-- Message List -->
     <div v-else class="messages-container">
       <div
         v-for="message in sortedMessages"
@@ -16,9 +19,10 @@
       >
         <MessageItem :message="message" class="message-item" />
       </div>
-      <!-- Sentinel element for detecting bottom -->
+      <!-- Sentinel Element for Infinite Scroll -->
       <div ref="sentinel" class="scroll-sentinel"></div>
     </div>
+    <!-- Infinite Scroll Loading -->
     <div v-if="loadingMore" class="loading-more">Loading more messages...</div>
   </div>
 </template>
@@ -28,8 +32,9 @@ import { ref, onMounted, onUnmounted, watch, computed } from "vue"
 import MessageItem from "./MessageItem.vue"
 import subscribeToMessages from "@/graphql/subscriptionClient.js"
 import { UPDATE_MESSAGE_READ_STATUS } from "@/graphql/queries.js"
-import { apolloClient } from "@/graphql/subscriptionClient.js"
+import apolloClient from "/src/graphql/subscriptionClient.js"
 
+// Props to get initial messages and loading functions
 const { messages, fetchMoreMessages, loading } = defineProps({
   messages: {
     type: Array,
@@ -45,102 +50,108 @@ const { messages, fetchMoreMessages, loading } = defineProps({
   },
 })
 
+// Reactive Variables
 const sentinel = ref(null)
 const intersectionObserver = ref(null)
 const loadingMore = ref(false)
 const subscriptionCleanup = ref(null)
 
-// Local copy of messages for reactivity
+// Local Reactive Messages State
 const localMessages = ref([...messages])
 
-// Track message IDs for uniqueness
+// Set of Message IDs (to track uniqueness)
 const messageIds = new Set(messages.map((msg) => msg.MessageId))
 
-// Computed property for sorting messages
+// Computed Sorted Messages (sorted by date - newest first)
 const sortedMessages = computed(() => {
   return [...localMessages.value].sort(
     (a, b) => new Date(b.ReceivedAt) - new Date(a.ReceivedAt),
   )
 })
 
-// Watch 'messages' prop and sync it with 'localMessages'
+// Watch for New Props and Sync with Local Messages
 watch(
   () => messages,
   (newMessages) => {
-    localMessages.value = [...newMessages]
-    newMessages.forEach((msg) => messageIds.add(msg.MessageId)) // Sync message IDs
+    newMessages.forEach((msg) => {
+      if (!messageIds.has(msg.MessageId)) {
+        messageIds.add(msg.MessageId)
+        localMessages.value.push(msg) // Add new unique messages
+      }
+    })
   },
 )
 
+// Mark Message as Read
 const markAsRead = async (message) => {
-  // Skip if the message is null or already marked as read
   if (!message || message.isRead) {
-    console.log("Message is either null or already marked as read.")
+    console.log("Message already read or invalid:", message)
     return
   }
-
   try {
-    // Pass the mutation and variables to the client
     const response = await apolloClient.mutate({
-      mutation: UPDATE_MESSAGE_READ_STATUS, // "query" is fine too, but "mutation" is more descriptive
+      mutation: UPDATE_MESSAGE_READ_STATUS,
       variables: {
         input: {
           MessageId: message.MessageId,
           isRead: true,
-          ReceivedAt: message.ReceivedAt, // Optional based on backend requirements
+          ReceivedAt: message.ReceivedAt,
         },
       },
     })
-
-    message.isRead = true
+    message.isRead = true // Update locally for instant feedback
     console.log("Successfully marked message as read:", response)
-  } catch (err) {
-    console.error("Error marking message as read:", err)
+  } catch (error) {
+    console.error("Error marking message as read:", error)
   }
 }
 
-// Function to handle fetching more messages when reaching the bottom
+// Handle Infinite Scroll
 const handleIntersection = async (entries) => {
   const [entry] = entries
   if (entry.isIntersecting && !loadingMore.value) {
     try {
       loadingMore.value = true
-      await fetchMoreMessages()
-    } catch (err) {
-      console.error("Error fetching more messages:", err)
+      await fetchMoreMessages() // Fetch older messages
+    } catch (error) {
+      console.error("Error fetching more messages:", error)
     } finally {
       loadingMore.value = false
     }
   }
 }
 
-// Subscribe to new messages on mounted
+// Setup Real-Time Subscription for New Messages
 const setupSubscription = () => {
   try {
+    console.log("Setting up subscription...")
     subscriptionCleanup.value = subscribeToMessages((newMessage) => {
-      console.log("Received new message:", newMessage) // Debugging
+      console.log("New message received:", newMessage)
 
-      if (!newMessage || !newMessage.MessageId) {
-        console.error("Malformed message received:", newMessage)
-        return // Ignore invalid messages
+      // Ignore invalid or duplicate messages
+      if (
+        !newMessage ||
+        !newMessage.MessageId ||
+        messageIds.has(newMessage.MessageId)
+      ) {
+        console.warn("Ignoring duplicate or invalid message:", newMessage)
+        return
       }
 
-      // Check message uniqueness
-      if (!messageIds.has(newMessage.MessageId)) {
-        messageIds.add(newMessage.MessageId)
-        localMessages.value = [newMessage, ...localMessages.value]
-      }
+      // Add new unique message
+      messageIds.add(newMessage.MessageId)
+      localMessages.value.unshift(newMessage) // Add to the top of the list
     })
   } catch (error) {
     console.error("Error setting up subscription:", error)
   }
 }
 
-// Subscribe and setup IntersectionObserver on mount
+// Lifecycle: Mount
 onMounted(() => {
-  setupSubscription()
+  setupSubscription() // Start subscription
 
-  // Setup IntersectionObserver for infinite scroll
+  // Setup Infinite Scroll Observer
   if (sentinel.value) {
     intersectionObserver.value = new IntersectionObserver(handleIntersection, {
       root: null,
@@ -151,13 +162,13 @@ onMounted(() => {
   }
 })
 
-// Cleanup on unmount to prevent memory leaks
+// Lifecycle: Unmount
 onUnmounted(() => {
-  // Unsubscribe from message subscription
+  // Cleanup subscription
   if (subscriptionCleanup.value) {
     subscriptionCleanup.value.unsubscribe()
   }
-  // Disconnect IntersectionObserver
+  // Cleanup intersection observer
   if (intersectionObserver.value) {
     if (sentinel.value) {
       intersectionObserver.value.unobserve(sentinel.value)
@@ -178,7 +189,8 @@ onUnmounted(() => {
 .no-messages {
   text-align: center;
   padding: 20px;
-  color: #666;
+  font-size: 1.2em;
+  color: #999;
 }
 
 .loading-more {
@@ -194,10 +206,14 @@ onUnmounted(() => {
 }
 
 .message-wrapper {
-  padding: 8px 12px;
-  border-bottom: 1px solid #e0e0e0;
-  background: transparent;
+  padding: 10px 15px;
+  border-bottom: 1px solid #ddd;
+  background: white;
   cursor: pointer;
+}
+
+.message-wrapper:hover {
+  background: #f9f9f9;
 }
 
 .message-wrapper:last-child {
@@ -211,5 +227,6 @@ onUnmounted(() => {
 
 .unread {
   font-weight: bold;
+  color: #333;
 }
 </style>
