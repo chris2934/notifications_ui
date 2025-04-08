@@ -1,40 +1,38 @@
-import { gql, ApolloClient, InMemoryCache, split } from "@apollo/client"
+import { ApolloClient, InMemoryCache, HttpLink, split } from "@apollo/client"
 import { WebSocketLink } from "@apollo/client/link/ws"
-import { HttpLink } from "@apollo/client/link/http" // Import HttpLink for queries/mutations
 import { getMainDefinition } from "@apollo/client/utilities"
 import {
   MESSAGE_SUBSCRIPTION,
   UPDATE_MESSAGE_READ_STATUS,
 } from "@/graphql/queries.js"
 
-// Initialize HTTP Link (for Queries and Mutations)
+// Initialize HTTP Link for Queries and Mutations
 const httpLink = new HttpLink({
   uri:
     import.meta.env.VITE_GRAPHQL_ENDPOINT ||
     "https://ztjvnzn4pvddjmiufzjlhs7rhi.appsync-api.us-east-1.amazonaws.com/graphql",
   headers: {
-    "x-api-key": import.meta.env.VITE_API_KEY,
+    "x-api-key": import.meta.env.VITE_API_KEY, // Ensure the API key is set correctly
   },
 })
 
-// Initialize WebSocket Link (for Subscriptions)
+// Initialize WebSocket Link for Subscriptions
 const wsLink = new WebSocketLink({
   uri:
     import.meta.env.VITE_GRAPHQL_WS_ENDPOINT ||
     "wss://ztjvnzn4pvddjmiufzjlhs7rhi.appsync-realtime-api.us-east-1.amazonaws.com/graphql",
   options: {
-    reconnect: true,
+    reconnect: true, // Automatically reconnect on WebSocket disruptions
     connectionParams: {
-      authHeader: {
-        "x-api-key":
-          import.meta.env.VITE_API_KEY || "da2-rkzr6tuboffz3iaorkfogfefvu",
-      },
+      // Include API key in WebSocket connection parameters
+      "x-api-key":
+        import.meta.env.VITE_API_KEY || "da2-rkzr6tuboffz3iaorkfogfefvu",
     },
   },
-  webSocketImpl: typeof WebSocket !== "undefined" ? WebSocket : require("ws"), // Use browser or Node.js WebSocket
+  webSocketImpl: typeof WebSocket !== "undefined" ? WebSocket : require("ws"), // Use browser or Node.js WebSocket implementation
 })
 
-// Combine HTTP and WebSocket Links for Apollo Client
+// Combine HTTP and WebSocket Links Using Split
 const link = split(
   ({ query }) => {
     const definition = getMainDefinition(query)
@@ -43,20 +41,23 @@ const link = split(
       definition.operation === "subscription"
     )
   },
-  wsLink, // Handle subscriptions via WebSocket
-  httpLink, // Handle queries and mutations via HTTP
+  wsLink, // Use WebSocketLink for subscriptions
+  httpLink, // Use HttpLink for queries and mutations
 )
 
-// Create the Apollo Client
 export const client = new ApolloClient({
-  link,
+  link: new HttpLink({
+    uri: "https://ztjvnzn4pvddjmiufzjlhs7rhi.appsync-api.us-east-1.amazonaws.com/graphql",
+    headers: {
+      "x-api-key": "da2-rkzr6tuboffz3iaorkfogfefvu", // Set additional headers if needed
+    },
+  }),
   cache: new InMemoryCache(),
-  connectToDevTools: true, // Enable debugging in browser dev tools
 })
 
 /**
  * Subscribe to new messages via WebSocket with a callback function for updates.
- * @param {Function} callback - Callback function to handle new messages received via the subscription
+ * @param {Function} callback - Function to handle new messages received via subscription
  * @returns {Object} - Object with an `unsubscribe` method
  */
 export default function subscribeToMessages(callback) {
@@ -64,22 +65,17 @@ export default function subscribeToMessages(callback) {
     throw new Error("A callback function is required for message subscription.")
   }
 
-  const parsedSubscriptionQuery = gql`
-    ${MESSAGE_SUBSCRIPTION}
-  `
-
   // Start subscription
   const subscription = client
     .subscribe({
-      query: parsedSubscriptionQuery,
+      query: MESSAGE_SUBSCRIPTION, // MESSAGE_SUBSCRIPTION must be a valid `gql`-tagged query
     })
     .subscribe({
       next: (data) => {
         console.log("Subscription payload received:", data)
         if (data?.data?.onNewMessage) {
           const newMessage = data.data.onNewMessage
-          callback(newMessage)
-          markMessageAsRead(newMessage)
+          callback(newMessage) // Pass the new message to the callback
         } else {
           console.warn("Unexpected subscription payload:", data)
         }
@@ -102,10 +98,10 @@ export default function subscribeToMessages(callback) {
 }
 
 /**
- * Mark a message as read using Apollo Client's mutate function.
- * @param {Object} message - The message that was received
+ * Marks a message as read using Apollo Client's mutate function.
+ * @param {Object} message - The message object containing its ID and timestamp
  */
-function markMessageAsRead(message) {
+export function markMessageAsRead(message) {
   if (!message?.MessageId || !message?.ReceivedAt) {
     console.error(
       "MessageId or ReceivedAt is missing. Cannot mark message as read.",
@@ -113,26 +109,40 @@ function markMessageAsRead(message) {
     return
   }
 
-  apolloClient
+  // Run the mutation to mark the message as read
+  client
     .mutate({
-      mutation: gql`
-        ${UPDATE_MESSAGE_READ_STATUS}
-      `,
+      mutation: UPDATE_MESSAGE_READ_STATUS, // UPDATE_MESSAGE_READ_STATUS must be a valid `gql`-tagged mutation
       variables: {
         input: {
           MessageId: message.MessageId,
           ReceivedAt: message.ReceivedAt,
-          isRead: true,
+          isRead: true, // Mark the message as read
         },
       },
     })
     .then((result) => {
-      console.log(
-        "Message successfully marked as read:",
-        result.data.updateMessage,
-      )
+      const success = result?.data?.updateMessage?.success
+      if (success) {
+        console.log(
+          "Message successfully marked as read:",
+          result.data.updateMessage,
+        )
+      } else {
+        console.error(
+          "Failed to mark message as read. Server returned an error:",
+          result.errors,
+        )
+      }
     })
     .catch((error) => {
-      console.error("Failed to mark message as read:", error)
+      if (error.graphQLErrors) {
+        console.error("GraphQL Errors:", error.graphQLErrors)
+      }
+      if (error.networkError) {
+        console.error("Network Error:", error.networkError)
+      } else {
+        console.error("Failed to mark message as read:", error)
+      }
     })
 }

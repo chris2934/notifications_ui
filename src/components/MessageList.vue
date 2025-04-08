@@ -30,9 +30,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch, computed } from "vue"
 import MessageItem from "./MessageItem.vue"
-import subscribeToMessages from "@/graphql/subscriptionClient.js"
-import { UPDATE_MESSAGE_READ_STATUS } from "@/graphql/queries.js"
-import apolloClient from "/src/graphql/subscriptionClient.js"
+import subscribeToMessages, {
+  markMessageAsRead,
+} from "@/graphql/subscriptionClient.js" // Import markMessageAsRead here
 
 // Props to get initial messages and loading functions
 const { messages, fetchMoreMessages, loading } = defineProps({
@@ -89,18 +89,9 @@ const markAsRead = async (message) => {
     return
   }
   try {
-    const response = await apolloClient.mutate({
-      mutation: UPDATE_MESSAGE_READ_STATUS,
-      variables: {
-        input: {
-          MessageId: message.MessageId,
-          isRead: true,
-          ReceivedAt: message.ReceivedAt,
-        },
-      },
-    })
-    message.isRead = true // Update locally for instant feedback
-    console.log("Successfully marked message as read:", response)
+    markMessageAsRead(message) // Call the centralized function
+    message.isRead = true // Update the message locally to reflect the read status instantly
+    console.log("Message marked as read successfully.")
   } catch (error) {
     console.error("Error marking message as read:", error)
   }
