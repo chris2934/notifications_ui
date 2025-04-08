@@ -19,7 +19,7 @@ export const GET_MESSAGES = `
   }
 `
 
-export const MESSAGE_SUBSCRIPTION = `
+export const MESSAGE_SUBSCRIPTION = gql`
   subscription onNewMessage {
     onNewMessage {
       MessageId
