@@ -25,6 +25,7 @@ export const MESSAGE_SUBSCRIPTION = `
       MessageId
       ReceivedAt
       isRead
+      recipientEmail
       MessageBody {
         content
         metadata {
