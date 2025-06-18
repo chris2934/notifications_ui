@@ -18,7 +18,8 @@
     "@aws-amplify/ui-vue": "^4.2.29",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@fontsource/material-symbols-outlined": "^5.2.5",
+    "@fontsource/material-symbols-outlined": "^5.2.13",
+    "@mdi/font": "^7.4.47",
     "@mui/icons-material": "^6.4.6",
     "@mui/material": "^6.4.6",
     "aws-amplify": "^6.14.1",
@@ -28,7 +29,9 @@
     "material-symbols": "^0.29.1",
     "subscriptions-transport-ws": "^0.11.0",
     "vite-plugin-commonjs": "^0.10.4",
+    "vite-plugin-vuetify": "^2.1.1",
     "vue": "^3.5.13",
+    "vuetify": "^3.8.9",
     "ws": "^8.18.1"
   },
   "devDependencies": {

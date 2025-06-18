@@ -1,96 +1,125 @@
 <template>
   <div class="app-container">
     <!-- Header -->
-    <header class="sticky-header">
+    <v-app-bar class="sticky-header" color="white" elevation="2" flat>
       <div class="header-content">
         <h1>My App</h1>
         <div class="header-icons">
-          <div class="header-icon" @click="toggleMessages($event)">
-            <span
-              class="material-symbols-outlined"
-              :style="{ color: unreadCount > 0 ? 'red' : 'black' }"
+          <v-btn class="header-icon" icon @click="toggleMessages($event)">
+            <v-badge
+              :content="unreadCount"
+              :value="unreadCount > 0"
+              color="error"
+              location="top end"
             >
-              {{ unreadCount > 0 ? "notifications_unread" : "notifications" }}
-            </span>
-          </div>
-          <div class="header-icon" @click="toggleSettings($event)">
-            <span class="material-symbols-outlined">settings</span>
-          </div>
+              <v-icon
+                :color="unreadCount > 0 ? 'error' : 'default'"
+                class="material-symbols-outlined"
+                size="30"
+              >
+                {{ unreadCount > 0 ? "notifications_unread" : "notifications" }}
+              </v-icon>
+            </v-badge>
+          </v-btn>
+          <v-btn class="header-icon" icon @click="toggleSettings($event)">
+            <v-icon class="material-symbols-outlined" size="30"
+              >settings</v-icon
+            >
+          </v-btn>
         </div>
       </div>
-    </header>
+    </v-app-bar>
 
     <!-- Main Content Area -->
     <main class="main-content">
       <!-- Sliding Panels -->
       <div class="panel-container">
         <!-- Notifications Panel -->
-        <div
+        <v-card
           v-if="isMessageListOpen"
           ref="messagePanel"
           class="side-panel notifications-panel"
+          elevation="4"
         >
           <div class="panel-header">
             <h2>Notifications</h2>
-            <span
-              class="material-symbols-outlined close-icon"
+            <v-btn
+              class="close-icon"
+              elevation="0"
+              icon
+              variant="text"
               @click="toggleMessages($event)"
             >
-              close
-            </span>
+              <v-icon class="material-symbols-outlined">close</v-icon>
+            </v-btn>
           </div>
           <MessageList
-            :messages="messages"
-            :loading="loading"
-            @mark-as-read="handleMarkAsRead"
             :fetch-more-messages="fetchMoreMessages"
+            :loading="loading"
+            :messages="messages"
+            @mark-as-read="handleMarkAsRead"
           />
-        </div>
+        </v-card>
 
         <!-- Settings Panel -->
-        <div
+        <v-card
           v-if="isSettingsOpen"
           ref="settingsPanel"
           class="side-panel settings-panel"
+          elevation="4"
         >
           <div class="panel-header">
             <h2>Settings</h2>
-            <span
-              class="material-symbols-outlined close-icon"
+            <v-btn
+              class="close-icon"
+              elevation="0"
+              icon
+              variant="text"
               @click="toggleSettings($event)"
             >
-              close
-            </span>
+              <v-icon class="material-symbols-outlined">close</v-icon>
+            </v-btn>
           </div>
-          <div class="settings-content">
+          <v-card-text class="settings-content">
             <div class="settings-options">
-              <div class="settings-option">
-                <span class="material-symbols-outlined">notifications</span>
-                <span>Notification Settings</span>
-              </div>
-              <div class="settings-option">
-                <span class="material-symbols-outlined">person</span>
-                <span>Account Settings</span>
-              </div>
-              <div class="settings-option">
-                <span class="material-symbols-outlined">tune</span>
-                <span>Preferences</span>
-              </div>
+              <v-list>
+                <v-list-item class="settings-option">
+                  <template v-slot:prepend>
+                    <v-icon class="material-symbols-outlined"
+                      >notifications
+                    </v-icon>
+                  </template>
+                  <v-list-item-title>Notification Settings</v-list-item-title>
+                </v-list-item>
+                <v-list-item class="settings-option">
+                  <template v-slot:prepend>
+                    <v-icon class="material-symbols-outlined">person</v-icon>
+                  </template>
+                  <v-list-item-title>Account Settings</v-list-item-title>
+                </v-list-item>
+                <v-list-item class="settings-option">
+                  <template v-slot:prepend>
+                    <v-icon class="material-symbols-outlined">tune</v-icon>
+                  </template>
+                  <v-list-item-title>Preferences</v-list-item-title>
+                </v-list-item>
+              </v-list>
             </div>
-          </div>
-        </div>
+          </v-card-text>
+        </v-card>
       </div>
 
       <!-- Your main app content goes here -->
       <div class="app-content">
         <!-- Main application content -->
+        <slot></slot>
       </div>
     </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue"
+import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import MessageList from "./MessageList.vue"
 
 const props = defineProps({
@@ -175,9 +204,7 @@ onBeforeUnmount(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: 64px;
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 100px;
   z-index: 1000;
 }
 
@@ -189,6 +216,7 @@ onBeforeUnmount(() => {
   padding: 0 2rem;
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .header-icons {
@@ -197,23 +225,11 @@ onBeforeUnmount(() => {
 }
 
 .header-icon {
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 40px !important;
+  height: 40px !important;
 }
 
-.header-icon:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.header-icon .material-symbols-outlined {
-  font-size: 30px;
+.material-symbols-outlined {
   font-variation-settings:
     "FILL" 0,
     "wght" 400,
@@ -240,13 +256,10 @@ onBeforeUnmount(() => {
   right: 0;
   width: 350px;
   height: calc(100vh - 80px);
-  background: white;
-  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
   z-index: 900;
   overflow-y: auto;
-  transition: transform 0.3s ease;
 }
 
 .panel-header {
@@ -262,17 +275,6 @@ onBeforeUnmount(() => {
   font-size: 1.25rem;
 }
 
-.close-icon {
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-}
-
-.close-icon:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
 .settings-content {
   padding: 1rem;
 }
@@ -284,18 +286,13 @@ onBeforeUnmount(() => {
 }
 
 .settings-option {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  cursor: pointer;
   border-radius: 8px;
   transition: background-color 0.2s;
 }
 
-.settings-option:hover {
-  background-color: #f5f5f5;
-}
+/*.settings-option:hover {
+  background-color: rgb(var(--v-theme-surface-variant));
+}*/
 
 .app-content {
   flex: 1;

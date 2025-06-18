@@ -1,14 +1,25 @@
 <template>
-  <div class="message-item">
-    <div class="message-content">
-      {{ message.MessageBody.content }}
-    </div>
-    <div class="message-meta">
-      <span class="timestamp">
-        {{ formatTime(message.MessageBody.timestamp) }}
-      </span>
-    </div>
-  </div>
+  <v-card
+    :color="message.isRead ? 'surface' : 'surface-variant'"
+    class="message-item mb-3"
+    variant="flat"
+  >
+    <v-card-text>
+      <div class="message-content text-body-1">
+        {{ message.MessageBody.content }}
+      </div>
+      <div class="message-meta">
+        <v-chip
+          class="pa-0"
+          color="medium-emphasis"
+          size="x-small"
+          variant="text"
+        >
+          {{ formatTime(message.MessageBody.timestamp) }}
+        </v-chip>
+      </div>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script setup>
@@ -32,18 +43,15 @@ const formatTime = (timestamp) => {
 
 <style scoped>
 .message-item {
-  margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 4px;
-  background: transparent !important;
+  transition: background-color 0.2s ease;
 }
 
 .message-content {
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .message-meta {
-  font-size: 0.8em;
-  color: #666;
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

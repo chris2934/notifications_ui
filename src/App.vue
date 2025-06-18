@@ -1,7 +1,7 @@
 <template>
-  <div id="app">
+  <v-app>
     <MessageApp />
-  </div>
+  </v-app>
 </template>
 
 <script setup>
@@ -24,6 +24,7 @@ body {
     Arial,
     sans-serif;
 }
+
 header {
   padding: 1rem;
 }
