@@ -1,5 +1,5 @@
 <template>
-  <div class="message-list" ref="messageList">
+  <div ref="messageList" class="message-list">
     <!-- Loading State -->
     <div v-if="loading && localMessages.length === 0" class="loading">
       Loading messages...
@@ -13,8 +13,8 @@
       <div
         v-for="message in sortedMessages"
         :key="message.MessageId"
-        class="message-wrapper"
         :class="{ unread: !message.isRead, read: message.isRead }"
+        class="message-wrapper"
         @click="markAsRead(message)"
       >
         <MessageItem :message="message" class="message-item" />
@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, computed } from "vue"
+import { computed, onMounted, onUnmounted, ref, watch } from "vue"
 import MessageItem from "./MessageItem.vue"
 import subscribeToMessages, {
   markMessageAsRead,
@@ -217,7 +217,6 @@ onUnmounted(() => {
 }
 
 .unread {
-  font-weight: bold;
   color: #333;
 }
 </style>

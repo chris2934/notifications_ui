@@ -1,40 +1,124 @@
 <template>
-  <header class="sticky-header">
-    <div class="header-content">
-      <h1>Notifications</h1>
-      <div class="header-icons">
-        <!-- Notification Icon -->
-        <div class="notification-wrapper">
-          <div class="notification-icon" @click="toggleMessages($event)">
-            <span
-              class="material-symbols-outlined"
-              :style="{ color: unreadCount > 0 ? 'red' : 'black' }"
+  <div class="app-container">
+    <!-- Header -->
+    <v-app-bar class="sticky-header" color="white" elevation="2" flat>
+      <div class="header-content">
+        <h1>My App</h1>
+        <div class="header-icons">
+          <v-btn class="header-icon" icon @click="toggleMessages($event)">
+            <v-badge
+              :content="unreadCount"
+              :value="unreadCount > 0"
+              color="error"
+              location="top end"
             >
-              {{ unreadCount > 0 ? "notifications_unread" : "notifications" }}
-            </span>
-          </div>
-
-          <!-- Message Dropdown -->
-          <div v-if="isMessageListOpen" ref="dropdown" class="message-dropdown">
-            <MessageList
-              :messages="messages"
-              :loading="loading"
-              @mark-as-read="handleMarkAsRead"
-              :fetch-more-messages="fetchMoreMessages"
-            />
-          </div>
+              <v-icon
+                :color="unreadCount > 0 ? 'error' : 'default'"
+                class="material-symbols-outlined"
+                size="30"
+              >
+                {{ unreadCount > 0 ? "notifications_unread" : "notifications" }}
+              </v-icon>
+            </v-badge>
+          </v-btn>
+          <v-btn class="header-icon" icon @click="toggleSettings($event)">
+            <v-icon class="material-symbols-outlined" size="30"
+              >settings
+            </v-icon>
+          </v-btn>
         </div>
       </div>
-    </div>
-  </header>
+    </v-app-bar>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Sliding Panels -->
+      <div class="panel-container">
+        <!-- Notifications Panel -->
+        <v-card
+          v-if="isMessageListOpen"
+          ref="messagePanel"
+          class="side-panel notifications-panel"
+          elevation="4"
+        >
+          <div class="panel-header">
+            <h2>Notifications</h2>
+            <v-btn
+              class="close-icon"
+              elevation="0"
+              icon
+              variant="text"
+              @click="toggleMessages($event)"
+            >
+              <v-icon class="material-symbols-outlined">close</v-icon>
+            </v-btn>
+          </div>
+          <MessageList
+            :fetch-more-messages="fetchMoreMessages"
+            :loading="loading"
+            :messages="messages"
+            @mark-as-read="handleMarkAsRead"
+          />
+        </v-card>
+
+        <!-- Settings Panel -->
+        <v-card
+          v-if="isSettingsOpen"
+          ref="settingsPanel"
+          class="side-panel settings-panel"
+          elevation="4"
+        >
+          <div class="panel-header">
+            <h2>Settings</h2>
+            <v-btn
+              class="close-icon"
+              elevation="0"
+              icon
+              variant="text"
+              @click="toggleSettings($event)"
+            >
+              <v-icon class="material-symbols-outlined">close</v-icon>
+            </v-btn>
+          </div>
+          <v-card-text class="settings-content">
+            <div class="settings-options">
+              <v-list>
+                <v-list-item class="settings-option">
+                  <template v-slot:prepend>
+                    <v-icon class="material-symbols-outlined"
+                      >notifications
+                    </v-icon>
+                  </template>
+                  <v-list-item-title>Notification Settings</v-list-item-title>
+                </v-list-item>
+                <v-list-item class="settings-option">
+                  <template v-slot:prepend>
+                    <v-icon class="material-symbols-outlined">person</v-icon>
+                  </template>
+                  <v-list-item-title>Account Settings</v-list-item-title>
+                </v-list-item>
+                <v-list-item class="settings-option">
+                  <template v-slot:prepend>
+                    <v-icon class="material-symbols-outlined">tune</v-icon>
+                  </template>
+                  <v-list-item-title>Preferences</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </div>
+          </v-card-text>
+        </v-card>
+      </div>
+      <div class="app-content">
+        <slot></slot>
+      </div>
+    </main>
+  </div>
 </template>
 
-32;
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue"
+import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import MessageList from "./MessageList.vue"
 
-// Props for the parent component
 const props = defineProps({
   messages: {
     type: Array,
@@ -46,12 +130,39 @@ const props = defineProps({
   },
 })
 
-// Function to fetch more messages
+const isMessageListOpen = ref(false)
+const isSettingsOpen = ref(false)
+const messagePanel = ref(null)
+const settingsPanel = ref(null)
+
+const unreadCount = computed(
+  () => props.messages.filter((message) => !message.isRead).length,
+)
+
+const toggleMessages = (event) => {
+  event.stopPropagation()
+  isMessageListOpen.value = !isMessageListOpen.value
+  if (isMessageListOpen.value) {
+    isSettingsOpen.value = false
+  }
+}
+
+const toggleSettings = (event) => {
+  event.stopPropagation()
+  isSettingsOpen.value = !isSettingsOpen.value
+  if (isSettingsOpen.value) {
+    isMessageListOpen.value = false
+  }
+}
+
+const handleMarkAsRead = (clickedMessage) => {
+  const message = props.messages.find((msg) => msg.id === clickedMessage.id)
+  if (message) message.isRead = true
+}
+
 const fetchMoreMessages = async () => {
   try {
     console.log("Fetching more messages...")
-    // Example: Add your API call or fetching logic here
-    // Simulating fetch delay for example
     await new Promise((resolve) => setTimeout(resolve, 1000))
     console.log("More messages fetched.")
   } catch (error) {
@@ -59,78 +170,38 @@ const fetchMoreMessages = async () => {
   }
 }
 
-// Reactive state to track dropdown open/close status
-const isMessageListOpen = ref(true) // Start with dropdown open by default
-
-// Reference to the dropdown menu element
-const dropdown = ref(null)
-
-// Computed property for unread messages
-const unreadCount = computed(
-  () => props.messages.filter((message) => !message.isRead).length,
-)
-
-// Toggle the dropdown open/close
-const toggleMessages = (event) => {
-  event.stopPropagation() // Prevent event from triggering the "outside click" logic
-  isMessageListOpen.value = !isMessageListOpen.value
-
-  if (isMessageListOpen.value) {
-    addOutsideClickListener()
-  } else {
-    removeOutsideClickListener()
-  }
-}
-
-// Handle marking messages as read when clicked (inside the dropdown)
-const handleMarkAsRead = (clickedMessage) => {
-  const message = props.messages.find((msg) => msg.id === clickedMessage.id)
-  if (message) message.isRead = true
-}
-
-// Detect clicks outside the dropdown
 const handleClickOutside = (event) => {
   if (
-    dropdown.value && // Ensure dropdown exists
-    !dropdown.value.contains(event.target) && // Click is outside the dropdown
-    event.target.closest(".notification-icon") === null // Click is NOT on the notification-icon
+    !event.target.closest(".side-panel") &&
+    !event.target.closest(".header-icon")
   ) {
     isMessageListOpen.value = false
-    removeOutsideClickListener()
+    isSettingsOpen.value = false
   }
 }
 
-// Add the outside click listener
-const addOutsideClickListener = () => {
-  document.addEventListener("mousedown", handleClickOutside)
-}
-
-// Remove the outside click listener
-const removeOutsideClickListener = () => {
-  document.removeEventListener("mousedown", handleClickOutside)
-}
-
-// Automatically open the dropdown on mount
 onMounted(() => {
-  if (isMessageListOpen.value) {
-    addOutsideClickListener()
-  }
+  document.addEventListener("click", handleClickOutside)
 })
 
-// Cleanup listeners when the component is destroyed
 onBeforeUnmount(() => {
-  removeOutsideClickListener()
+  document.removeEventListener("click", handleClickOutside)
 })
 </script>
 
 <style scoped>
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
 .sticky-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 100px;
   z-index: 1000;
 }
 
@@ -138,30 +209,24 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
+  height: 100%;
+  padding: 0 2rem;
   max-width: 1200px;
   margin: 0 auto;
-  position: relative; /* Use relative positioning for consistent alignment */
+  width: 100%;
 }
 
 .header-icons {
   display: flex;
-  align-items: center;
+  gap: 1rem;
 }
 
-/* Notification Icon */
-.notification-wrapper {
-  position: relative; /* Ensure dropdown aligns correctly relative to this wrapper */
+.header-icon {
+  width: 40px !important;
+  height: 40px !important;
 }
 
-.notification-icon {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-
-.notification-icon .material-symbols-outlined {
-  font-size: 36px; /* Maintain icon size consistency */
+.material-symbols-outlined {
   font-variation-settings:
     "FILL" 0,
     "wght" 400,
@@ -169,43 +234,82 @@ onBeforeUnmount(() => {
     "opsz" 48;
 }
 
-/* Dropdown Styling */
-.message-dropdown {
-  position: absolute;
-  top: calc(
-    100% + 58px
-  ); /* Start dropdown directly below the header with a gap */
-  left: 50%; /* Center-align dropdown with the notification icon */
-  transform: translateX(-50%);
-  width: 300px;
-  max-height: 500px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.main-content {
+  margin-top: 64px;
+  height: calc(100vh - 64px);
+  position: relative;
+  display: flex;
+}
+
+.panel-container {
+  position: relative;
+  height: 100%;
+  margin-top: 20px;
+}
+
+.side-panel {
+  position: fixed;
+  top: 95px;
+  right: 0;
+  width: 350px;
+  height: calc(100vh - 80px);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  z-index: 900;
   overflow-y: auto;
-  z-index: 1050;
-  padding: 1rem 0;
 }
 
-/* Mobile-Friendly Adjustments */
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.settings-content {
+  padding: 1rem;
+}
+
+.settings-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.settings-option {
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+/*.settings-option:hover {
+  background-color: rgb(var(--v-theme-surface-variant));
+}*/
+
+.app-content {
+  flex: 1;
+  padding: 2rem;
+}
+
+/* Media Queries */
 @media (max-width: 768px) {
-  .header-content {
-    padding: 0.5rem 1rem;
+  .side-panel {
+    width: 100%;
   }
 
-  .message-dropdown {
-    width: 250px; /* Adjust dropdown width for smaller screens */
+  .header-content {
+    padding: 0 1rem;
   }
 }
 
-/* Larger Screen Adjustments */
 @media (min-width: 1440px) {
-  .header-content {
-    padding: 1rem 3rem;
-  }
-
-  .message-dropdown {
-    width: 350px; /* Increase dropdown size for larger screens */
+  .side-panel {
+    width: 400px;
   }
 }
 </style>

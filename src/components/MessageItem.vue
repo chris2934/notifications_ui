@@ -1,13 +1,25 @@
 <template>
-  <div class="message-item">
-    <div class="message-content">
-      {{ message.MessageBody.content }}
-    </div>
-    <div class="message-meta">
-      <span class="timestamp">
-        {{ formatTime(message.MessageBody.timestamp) }}
-      </span>
-    </div>
+  <div class="message-wrapper mb-3">
+    <v-card class="message-item" color="surface" variant="flat" width="100%">
+      <v-card-text class="card-text-compact">
+        <div
+          :class="{ 'unread-text': !message.isRead }"
+          class="message-content text-body-1"
+        >
+          {{ message.MessageBody.content }}
+        </div>
+        <div class="message-meta">
+          <v-chip
+            class="pa-0"
+            color="medium-emphasis"
+            size="x-small"
+            variant="text"
+          >
+            {{ formatTime(message.MessageBody.timestamp) }}
+          </v-chip>
+        </div>
+      </v-card-text>
+    </v-card>
   </div>
 </template>
 
@@ -31,19 +43,39 @@ const formatTime = (timestamp) => {
 </script>
 
 <style scoped>
+.message-wrapper {
+  padding: 8px 16px;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.2s;
+  background-color: transparent;
+}
+
+.message-wrapper:hover {
+  background-color: #f9f9f9;
+}
+
 .message-item {
-  margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 4px;
-  background: transparent !important;
+  width: 100%;
+  background-color: transparent !important;
+  box-shadow: none;
+}
+
+.card-text-compact {
+  padding: 0 !important;
 }
 
 .message-content {
-  margin-bottom: 5px;
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+
+.unread-text {
+  font-weight: bold;
 }
 
 .message-meta {
-  font-size: 0.8em;
-  color: #666;
+  display: flex;
+  justify-content: flex-start;
 }
 </style>
