@@ -23,8 +23,8 @@
           </v-btn>
           <v-btn class="header-icon" icon @click="toggleSettings($event)">
             <v-icon class="material-symbols-outlined" size="30"
-              >settings</v-icon
-            >
+              >settings
+            </v-icon>
           </v-btn>
         </div>
       </div>
@@ -108,10 +108,7 @@
           </v-card-text>
         </v-card>
       </div>
-
-      <!-- Your main app content goes here -->
       <div class="app-content">
-        <!-- Main application content -->
         <slot></slot>
       </div>
     </main>
