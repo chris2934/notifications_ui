@@ -90,6 +90,15 @@
                     </v-icon>
                   </template>
                   <v-list-item-title>Notification Settings</v-list-item-title>
+                  <template v-slot:append>
+                    <v-switch
+                      v-model="notificationsEnabled"
+                      color="primary"
+                      density="compact"
+                      hide-details
+                      @update:model-value="handleNotificationToggle"
+                    ></v-switch>
+                  </template>
                 </v-list-item>
                 <v-list-item class="settings-option">
                   <template v-slot:prepend>
@@ -134,10 +143,17 @@ const isMessageListOpen = ref(false)
 const isSettingsOpen = ref(false)
 const messagePanel = ref(null)
 const settingsPanel = ref(null)
+const notificationsEnabled = ref(true) // Default value set to true
 
 const unreadCount = computed(
   () => props.messages.filter((message) => !message.isRead).length,
 )
+
+const handleNotificationToggle = (value) => {
+  // Handle the notification state change
+  console.log("Notifications:", value ? "enabled" : "disabled")
+  // Add your notification toggle logic here
+}
 
 const toggleMessages = (event) => {
   event.stopPropagation()
