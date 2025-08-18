@@ -127,6 +127,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import MessageList from "./MessageList.vue"
+import subscribeToMessages from "@/graphql/subscriptionClient"
 
 const props = defineProps({
   messages: {
@@ -139,20 +140,36 @@ const props = defineProps({
   },
 })
 
+const emit = defineEmits(["update:messages"])
+
 const isMessageListOpen = ref(false)
 const isSettingsOpen = ref(false)
 const messagePanel = ref(null)
 const settingsPanel = ref(null)
-const notificationsEnabled = ref(true) // Default value set to true
+const notificationsEnabled = ref(true)
+const messageSubscription = ref(null)
 
 const unreadCount = computed(
   () => props.messages.filter((message) => !message.isRead).length,
 )
 
 const handleNotificationToggle = (value) => {
-  // Handle the notification state change
-  console.log("Notifications:", value ? "enabled" : "disabled")
-  // Add your notification toggle logic here
+  notificationsEnabled.value = value
+  if (value) {
+    // Re-subscribe to messages
+    messageSubscription.value = subscribeToMessages((newMessage) => {
+      if (newMessage) {
+        const updatedMessages = [...props.messages, newMessage]
+        emit("update:messages", updatedMessages)
+      }
+    })
+  } else {
+    // Unsubscribe from messages
+    if (messageSubscription.value) {
+      messageSubscription.value.unsubscribe()
+      messageSubscription.value = null
+    }
+  }
 }
 
 const toggleMessages = (event) => {
@@ -198,10 +215,16 @@ const handleClickOutside = (event) => {
 
 onMounted(() => {
   document.addEventListener("click", handleClickOutside)
+  if (notificationsEnabled.value) {
+    handleNotificationToggle(true)
+  }
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside)
+  if (messageSubscription.value) {
+    messageSubscription.value.unsubscribe()
+  }
 })
 </script>
 
@@ -303,16 +326,11 @@ onBeforeUnmount(() => {
   transition: background-color 0.2s;
 }
 
-/*.settings-option:hover {
-  background-color: rgb(var(--v-theme-surface-variant));
-}*/
-
 .app-content {
   flex: 1;
   padding: 2rem;
 }
 
-/* Media Queries */
 @media (max-width: 768px) {
   .side-panel {
     width: 100%;

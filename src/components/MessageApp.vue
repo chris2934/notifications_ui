@@ -1,17 +1,17 @@
 <template>
   <div class="app-container">
     <Header
-      :messages="messages"
+      v-model:messages="messages"
       :loading="loading"
-      :unread-count="unreadCount"
       :mark-as-read="markAsRead"
+      :unread-count="unreadCount"
     />
     <div class="main-content"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue"
+import { computed, onMounted, ref } from "vue"
 import axios from "axios"
 import Header from "./MessageHeader.vue"
 import { GET_MESSAGES } from "../graphql/queries"
