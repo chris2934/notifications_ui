@@ -152,19 +152,34 @@ const messageSubscription = ref(null)
 const unreadCount = computed(
   () => props.messages.filter((message) => !message.isRead).length,
 )
+const transformIncomingMessage = (msg) => ({
+  MessageId: msg.MessageId || msg.id,
+  ReceivedAt: msg.ReceivedAt || new Date().toISOString(),
+  isRead: false,
+  MessageBody: {
+    content: msg.MessageBody?.content || msg.content || "",
+    metadata: msg.MessageBody?.metadata || {
+      type: "NOTIFICATION",
+      version: "1.0",
+    },
+    status: msg.MessageBody?.status || "RECEIVED",
+    timestamp:
+      msg.MessageBody?.timestamp || msg.ReceivedAt || new Date().toISOString(),
+  },
+})
 
 const handleNotificationToggle = (value) => {
   notificationsEnabled.value = value
   if (value) {
-    // Re-subscribe to messages
-    messageSubscription.value = subscribeToMessages((newMessage) => {
-      if (newMessage) {
-        const updatedMessages = [...props.messages, newMessage]
+    messageSubscription.value = subscribeToMessages((rawMessage) => {
+      if (rawMessage) {
+        // Transform the message before emitting it
+        const newMessage = transformIncomingMessage(rawMessage)
+        const updatedMessages = [newMessage, ...props.messages]
         emit("update:messages", updatedMessages)
       }
     })
   } else {
-    // Unsubscribe from messages
     if (messageSubscription.value) {
       messageSubscription.value.unsubscribe()
       messageSubscription.value = null
