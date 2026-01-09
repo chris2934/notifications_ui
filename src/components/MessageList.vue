@@ -12,13 +12,47 @@
         :key="message.MessageId"
         :class="{ unread: !message.isRead, read: message.isRead }"
         class="message-wrapper"
-        @click="markAsRead(message)"
+        @click.stop="openMessage(message)"
       >
         <MessageItem :message="message" class="message-item" />
       </div>
       <div ref="sentinel" class="scroll-sentinel"></div>
     </div>
     <div v-if="loadingMore" class="loading-more">Loading more messages...</div>
+
+    <!-- Full Message View Dialog -->
+    <v-dialog v-model="isDialogOpen" max-width="500px">
+      <!-- Added @click.stop to the card to prevent any clicks inside from propagating -->
+      <v-card v-if="selectedMessage" @click.stop>
+        <v-card-title class="d-flex justify-space-between align-center">
+          <span>Message Detail</span>
+          <!-- Added .stop to prevent closing the message panel when clicking the X -->
+          <v-btn icon variant="text" @click.stop="isDialogOpen = false">
+            <v-icon class="material-symbols-outlined">close</v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="pt-4">
+          <div class="text-caption mb-3 text-medium-emphasis">
+            {{ formatFullDate(selectedMessage.MessageBody.timestamp) }}
+          </div>
+          <div class="text-body-1 full-message-body">
+            {{ selectedMessage.MessageBody.content }}
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <!-- Added .stop to prevent closing the message panel when clicking Close -->
+          <v-btn
+            color="primary"
+            variant="text"
+            @click.stop="isDialogOpen = false"
+          >
+            Close
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -37,6 +71,10 @@ const sentinel = ref(null)
 const intersectionObserver = ref(null)
 const loadingMore = ref(false)
 
+// Dialog and selection state
+const isDialogOpen = ref(false)
+const selectedMessage = ref(null)
+
 const sortedMessages = computed(() => {
   return [...props.messages].sort((a, b) => {
     const dateA = new Date(a.ReceivedAt || 0).getTime()
@@ -45,13 +83,29 @@ const sortedMessages = computed(() => {
   })
 })
 
-const markAsRead = async (message) => {
-  if (!message || message.isRead) return
+const openMessage = async (message) => {
+  if (!message) return
+
+  selectedMessage.value = message
+  isDialogOpen.value = true
+
+  // Mark as read if necessary
+  if (!message.isRead) {
+    try {
+      markMessageAsRead(message)
+      message.isRead = true
+    } catch (error) {
+      console.error("Error marking message as read:", error)
+    }
+  }
+}
+
+const formatFullDate = (timestamp) => {
+  if (!timestamp) return ""
   try {
-    markMessageAsRead(message)
-    message.isRead = true
-  } catch (error) {
-    console.error("Error marking message as read:", error)
+    return new Date(timestamp).toLocaleString()
+  } catch (e) {
+    return "Invalid date"
   }
 }
 
@@ -135,5 +189,11 @@ onUnmounted(() => {
 
 .unread {
   color: #333;
+}
+
+.full-message-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
 }
 </style>

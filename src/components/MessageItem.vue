@@ -68,6 +68,12 @@ const formatTime = (timestamp) => {
 .message-content {
   margin-bottom: 2px;
   line-height: 1.2;
+  /* Truncate text to 2 lines for the list preview */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .unread-text {
