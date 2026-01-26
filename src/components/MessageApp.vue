@@ -1,21 +1,18 @@
 <template>
   <div class="app-container">
-    <Header
-      v-model:messages="messages"
-      :loading="loading"
-      :mark-as-read="markAsRead"
-      :unread-count="unreadCount"
-    />
-    <div class="main-content"></div>
+    <div class="main-content">
+      <!-- Content goes here -->
+    </div>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from "vue"
 import axios from "axios"
-import Header from "./MessageHeader.vue"
 import { GET_MESSAGES } from "../graphql/queries"
 import { sortMessagesByTimestamp } from "../utils/messageHelpers"
+
+const props = defineProps({})
 
 // API keys and endpoints
 const apiKey = import.meta.env.VITE_API_KEY

@@ -1,126 +1,116 @@
 <template>
-  <div class="app-container">
-    <!-- Header -->
-    <v-app-bar class="sticky-header" color="white" elevation="2" flat>
-      <div class="header-content">
-        <h1>My App</h1>
-        <div class="header-icons">
-          <v-btn class="header-icon" icon @click="toggleMessages($event)">
-            <v-badge
-              :content="unreadCount"
-              :value="unreadCount > 0"
-              color="error"
-              location="top end"
-            >
-              <v-icon
-                :color="unreadCount > 0 ? 'error' : 'default'"
-                class="material-symbols-outlined"
-                size="30"
-              >
-                {{ unreadCount > 0 ? "notifications_unread" : "notifications" }}
-              </v-icon>
-            </v-badge>
-          </v-btn>
-          <v-btn class="header-icon" icon @click="toggleSettings($event)">
-            <v-icon class="material-symbols-outlined" size="30"
-              >settings
-            </v-icon>
+  <div class="header-actions">
+    <v-btn class="header-icon" icon @click="toggleMessages($event)">
+      <v-badge
+        :content="unreadCount"
+        :value="unreadCount > 0"
+        color="error"
+        location="top end"
+      >
+        <v-icon
+          :color="unreadCount > 0 ? 'error' : 'default'"
+          class="material-symbols-outlined"
+          size="30"
+        >
+          {{ unreadCount > 0 ? "notifications_unread" : "notifications" }}
+        </v-icon>
+      </v-badge>
+    </v-btn>
+    <v-btn class="header-icon" icon @click="toggleSettings($event)">
+      <v-icon class="material-symbols-outlined" size="30">settings</v-icon>
+    </v-btn>
+    <v-chip class="ml-2 mr-2" size="small" variant="text">
+      {{ user.username }}
+    </v-chip>
+    <v-btn class="mr-2" size="small" variant="outlined" @click="signOut">
+      Sign Out
+    </v-btn>
+
+    <!-- Sliding Panels -->
+    <div class="panel-container">
+      <!-- Notifications Panel -->
+      <v-card
+        v-if="isMessageListOpen"
+        ref="messagePanel"
+        class="side-panel notifications-panel"
+        elevation="4"
+      >
+        <div class="panel-header">
+          <h2>Notifications</h2>
+          <v-btn
+            class="close-icon"
+            elevation="0"
+            icon
+            variant="text"
+            @click="toggleMessages($event)"
+          >
+            <v-icon class="material-symbols-outlined">close</v-icon>
           </v-btn>
         </div>
-      </div>
-    </v-app-bar>
+        <MessageList
+          :fetch-more-messages="fetchMoreMessages"
+          :loading="loading"
+          :messages="messages"
+          @mark-as-read="handleMarkAsRead"
+        />
+      </v-card>
 
-    <!-- Main Content Area -->
-    <main class="main-content">
-      <!-- Sliding Panels -->
-      <div class="panel-container">
-        <!-- Notifications Panel -->
-        <v-card
-          v-if="isMessageListOpen"
-          ref="messagePanel"
-          class="side-panel notifications-panel"
-          elevation="4"
-        >
-          <div class="panel-header">
-            <h2>Notifications</h2>
-            <v-btn
-              class="close-icon"
-              elevation="0"
-              icon
-              variant="text"
-              @click="toggleMessages($event)"
-            >
-              <v-icon class="material-symbols-outlined">close</v-icon>
-            </v-btn>
+      <!-- Settings Panel -->
+      <v-card
+        v-if="isSettingsOpen"
+        ref="settingsPanel"
+        class="side-panel settings-panel"
+        elevation="4"
+      >
+        <div class="panel-header">
+          <h2>Settings</h2>
+          <v-btn
+            class="close-icon"
+            elevation="0"
+            icon
+            variant="text"
+            @click="toggleSettings($event)"
+          >
+            <v-icon class="material-symbols-outlined">close</v-icon>
+          </v-btn>
+        </div>
+        <v-card-text class="settings-content">
+          <div class="settings-options">
+            <v-list>
+              <v-list-item class="settings-option">
+                <template v-slot:prepend>
+                  <v-icon class="material-symbols-outlined"
+                    >notifications</v-icon
+                  >
+                </template>
+                <v-list-item-title>Notification Settings</v-list-item-title>
+                <template v-slot:append>
+                  <v-switch
+                    v-model="notificationsEnabled"
+                    color="primary"
+                    density="compact"
+                    hide-details
+                    @update:model-value="handleNotificationToggle"
+                  ></v-switch>
+                </template>
+              </v-list-item>
+              <v-list-item class="settings-option">
+                <template v-slot:prepend>
+                  <v-icon class="material-symbols-outlined">person</v-icon>
+                </template>
+                <v-list-item-title>Account Settings</v-list-item-title>
+              </v-list-item>
+              <v-list-item class="settings-option">
+                <template v-slot:prepend>
+                  <v-icon class="material-symbols-outlined">tune</v-icon>
+                </template>
+                <v-list-item-title>Preferences</v-list-item-title>
+              </v-list-item>
+            </v-list>
           </div>
-          <MessageList
-            :fetch-more-messages="fetchMoreMessages"
-            :loading="loading"
-            :messages="messages"
-            @mark-as-read="handleMarkAsRead"
-          />
-        </v-card>
-
-        <!-- Settings Panel -->
-        <v-card
-          v-if="isSettingsOpen"
-          ref="settingsPanel"
-          class="side-panel settings-panel"
-          elevation="4"
-        >
-          <div class="panel-header">
-            <h2>Settings</h2>
-            <v-btn
-              class="close-icon"
-              elevation="0"
-              icon
-              variant="text"
-              @click="toggleSettings($event)"
-            >
-              <v-icon class="material-symbols-outlined">close</v-icon>
-            </v-btn>
-          </div>
-          <v-card-text class="settings-content">
-            <div class="settings-options">
-              <v-list>
-                <v-list-item class="settings-option">
-                  <template v-slot:prepend>
-                    <v-icon class="material-symbols-outlined"
-                      >notifications
-                    </v-icon>
-                  </template>
-                  <v-list-item-title>Notification Settings</v-list-item-title>
-                  <template v-slot:append>
-                    <v-switch
-                      v-model="notificationsEnabled"
-                      color="primary"
-                      density="compact"
-                      hide-details
-                      @update:model-value="handleNotificationToggle"
-                    ></v-switch>
-                  </template>
-                </v-list-item>
-                <v-list-item class="settings-option">
-                  <template v-slot:prepend>
-                    <v-icon class="material-symbols-outlined">person</v-icon>
-                  </template>
-                  <v-list-item-title>Account Settings</v-list-item-title>
-                </v-list-item>
-                <v-list-item class="settings-option">
-                  <template v-slot:prepend>
-                    <v-icon class="material-symbols-outlined">tune</v-icon>
-                  </template>
-                  <v-list-item-title>Preferences</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </div>
-          </v-card-text>
-        </v-card>
-      </div>
-      <div class="app-content">
-        <slot></slot>
-      </div>
-    </main>
+        </v-card-text>
+      </v-card>
+    </div>
   </div>
 </template>
 
@@ -137,6 +127,14 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false,
+  },
+  user: {
+    type: Object,
+    required: true,
+  },
+  signOut: {
+    type: Function,
+    required: true,
   },
 })
 
@@ -244,35 +242,10 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.app-container {
+.header-actions {
   display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-.sticky-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100px;
-  z-index: 1000;
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  height: 100%;
-  padding: 0 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.header-icons {
-  display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .header-icon {
@@ -289,8 +262,8 @@ onBeforeUnmount(() => {
 }
 
 .main-content {
-  margin-top: 64px;
-  height: calc(100vh - 64px);
+  margin-top: 20px;
+  height: calc(100vh - 84px);
   position: relative;
   display: flex;
 }
@@ -303,10 +276,10 @@ onBeforeUnmount(() => {
 
 .side-panel {
   position: fixed;
-  top: 95px;
+  top: 64px;
   right: 0;
   width: 350px;
-  height: calc(100vh - 80px);
+  height: calc(100vh - 64px);
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
   z-index: 900;
