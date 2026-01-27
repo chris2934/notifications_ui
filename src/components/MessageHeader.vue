@@ -118,6 +118,9 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import MessageList from "./MessageList.vue"
 import { useNotificationToggle } from "@/utils/useNotificationToggle"
+import { usePanelToggle } from "@/utils/usePanelToggle"
+import { calculateUnreadCount } from "@/utils/messageHelpers"
+import { useClickOutside } from "@/utils/useClickOutside"
 
 const props = defineProps({
   messages: {
@@ -140,10 +143,16 @@ const props = defineProps({
 
 const emit = defineEmits(["update:messages"])
 
-const isMessageListOpen = ref(false)
-const isSettingsOpen = ref(false)
 const messagePanel = ref(null)
 const settingsPanel = ref(null)
+
+const { isMessageListOpen, isSettingsOpen, toggleMessages, toggleSettings } =
+  usePanelToggle()
+
+const { handleClickOutside } = useClickOutside(() => {
+  isMessageListOpen.value = false
+  isSettingsOpen.value = false
+})
 
 const { notificationsEnabled, handleNotificationToggle, cleanup } =
   useNotificationToggle((newMessage) => {
@@ -151,21 +160,7 @@ const { notificationsEnabled, handleNotificationToggle, cleanup } =
     emit("update:messages", updatedMessages)
   })
 
-const unreadCount = computed(
-  () => props.messages.filter((message) => !message.isRead).length,
-)
-
-const toggleMessages = (event) => {
-  event.stopPropagation()
-  isMessageListOpen.value = !isMessageListOpen.value
-  isMessageListOpen.value && (isSettingsOpen.value = false)
-}
-
-const toggleSettings = (event) => {
-  event.stopPropagation()
-  isSettingsOpen.value = !isSettingsOpen.value
-  isSettingsOpen.value && (isMessageListOpen.value = false)
-}
+const unreadCount = computed(() => calculateUnreadCount(props.messages))
 
 const handleMarkAsRead = (clickedMessage) => {
   const message = props.messages.find((msg) => msg.id === clickedMessage.id)
@@ -181,16 +176,6 @@ const fetchMoreMessages = async () => {
     console.log("More messages fetched.")
   } catch (error) {
     console.error("Error fetching more messages:", error)
-  }
-}
-
-const handleClickOutside = (event) => {
-  if (
-    !event.target.closest(".side-panel") &&
-    !event.target.closest(".header-icon")
-  ) {
-    isMessageListOpen.value = false
-    isSettingsOpen.value = false
   }
 }
 

@@ -8,16 +8,9 @@
 
 <script setup>
 import { onMounted, ref } from "vue"
-import axios from "axios"
-import { GET_MESSAGES } from "../graphql/queries"
-import { sortMessagesByTimestamp } from "../utils/messageHelpers"
-import { transformIncomingMessage } from "../utils/messageTransformer"
+import { fetchMessagesFromAPI } from "../utils/messageApi"
 
 const props = defineProps({})
-
-// API keys and endpoints
-const apiKey = import.meta.env.VITE_API_KEY
-const graphqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT
 
 // State
 const messages = ref([])
@@ -26,26 +19,7 @@ const loading = ref(true)
 const fetchMessages = async () => {
   try {
     loading.value = true
-    const response = await axios.post(
-      graphqlEndpoint,
-      {
-        query: GET_MESSAGES,
-      },
-      {
-        headers: {
-          "x-api-key": apiKey,
-          "Content-Type": "application/json",
-        },
-      },
-    )
-    const fetchedMessages = Array.isArray(response?.data?.data?.getMessages)
-      ? response.data.data.getMessages
-      : []
-
-    messages.value = fetchedMessages
-      .filter((msg) => msg?.MessageId && msg?.ReceivedAt && msg?.MessageBody)
-      .map(transformIncomingMessage)
-      .sort(sortMessagesByTimestamp)
+    messages.value = await fetchMessagesFromAPI()
   } catch (error) {
     console.error("Error fetching messages:", error)
     messages.value = []
