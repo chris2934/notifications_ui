@@ -7,10 +7,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue"
+import { onMounted, ref } from "vue"
 import axios from "axios"
 import { GET_MESSAGES } from "../graphql/queries"
 import { sortMessagesByTimestamp } from "../utils/messageHelpers"
+import { transformIncomingMessage } from "../utils/messageTransformer"
 
 const props = defineProps({})
 
@@ -21,34 +22,6 @@ const graphqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT
 // State
 const messages = ref([])
 const loading = ref(true)
-
-// Computed: Count unread messages
-const unreadCount = computed(
-  () => messages.value.filter((message) => !message.isRead).length,
-)
-
-const markAsRead = (messageId) => {
-  const message = messages.value.find((msg) => msg.MessageId === messageId)
-  if (message) {
-    message.isRead = true
-  }
-}
-
-// Helper: Transform fetched/incoming messages to standard format
-const transformMessage = (msg) => ({
-  MessageId: msg.MessageId,
-  ReceivedAt: msg.ReceivedAt,
-  isRead: msg.isRead || false,
-  MessageBody: {
-    content: msg?.MessageBody?.content || "",
-    metadata: {
-      type: msg?.MessageBody?.metadata?.type || "NOTIFICATION",
-      version: msg?.MessageBody?.metadata?.version || "1.0",
-    },
-    status: msg?.MessageBody?.status || "UNKNOWN",
-    timestamp: msg?.MessageBody?.timestamp || msg?.ReceivedAt,
-  },
-})
 
 const fetchMessages = async () => {
   try {
@@ -71,7 +44,7 @@ const fetchMessages = async () => {
 
     messages.value = fetchedMessages
       .filter((msg) => msg?.MessageId && msg?.ReceivedAt && msg?.MessageBody)
-      .map(transformMessage)
+      .map(transformIncomingMessage)
       .sort(sortMessagesByTimestamp)
   } catch (error) {
     console.error("Error fetching messages:", error)

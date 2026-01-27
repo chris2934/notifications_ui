@@ -117,7 +117,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import MessageList from "./MessageList.vue"
-import subscribeToMessages from "@/graphql/subscriptionClient"
+import { useNotificationToggle } from "@/utils/useNotificationToggle"
 
 const props = defineProps({
   messages: {
@@ -144,46 +144,16 @@ const isMessageListOpen = ref(false)
 const isSettingsOpen = ref(false)
 const messagePanel = ref(null)
 const settingsPanel = ref(null)
-const notificationsEnabled = ref(true)
-const messageSubscription = ref(null)
+
+const { notificationsEnabled, handleNotificationToggle, cleanup } =
+  useNotificationToggle((newMessage) => {
+    const updatedMessages = [newMessage, ...props.messages]
+    emit("update:messages", updatedMessages)
+  })
 
 const unreadCount = computed(
   () => props.messages.filter((message) => !message.isRead).length,
 )
-const transformIncomingMessage = (msg) => {
-  const now = new Date().toISOString()
-  return {
-    MessageId: msg.MessageId ?? msg.id,
-    ReceivedAt: msg.ReceivedAt ?? now,
-    isRead: false,
-    MessageBody: {
-      content: msg.MessageBody?.content ?? msg.content ?? "",
-      metadata: msg.MessageBody?.metadata ?? {
-        type: "NOTIFICATION",
-        version: "1.0",
-      },
-      status: msg.MessageBody?.status ?? "RECEIVED",
-      timestamp: msg.MessageBody?.timestamp ?? msg.ReceivedAt ?? now,
-    },
-  }
-}
-
-const handleNotificationToggle = (value) => {
-  notificationsEnabled.value = value
-  if (value) {
-    messageSubscription.value = subscribeToMessages((rawMessage) => {
-      if (rawMessage) {
-        // Transform the message before emitting it
-        const newMessage = transformIncomingMessage(rawMessage)
-        const updatedMessages = [newMessage, ...props.messages]
-        emit("update:messages", updatedMessages)
-      }
-    })
-  } else {
-    messageSubscription.value?.unsubscribe()
-    messageSubscription.value = null
-  }
-}
 
 const toggleMessages = (event) => {
   event.stopPropagation()
@@ -233,9 +203,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside)
-  if (messageSubscription.value) {
-    messageSubscription.value.unsubscribe()
-  }
+  cleanup()
 })
 </script>
 

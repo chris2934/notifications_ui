@@ -101,72 +101,27 @@ import "@aws-amplify/ui-vue/styles.css"
 import { Authenticator } from "@aws-amplify/ui-vue"
 import { GET_MESSAGES } from "./graphql/queries"
 import { sortMessagesByTimestamp } from "./utils/messageHelpers"
-import subscribeToMessages from "./graphql/subscriptionClient"
+import { useNotificationToggle } from "./utils/useNotificationToggle"
+import { transformMessage } from "./utils/transformMessage"
 
 const isMessageListOpen = ref(false)
 const isSettingsOpen = ref(false)
 const messages = ref([])
 const loading = ref(true)
-const notificationsEnabled = ref(true)
-const messageSubscription = ref(null)
 const unreadCount = computed(
   () => messages.value.filter((m) => !m.isRead).length,
 )
 
-const transformIncomingMessage = (msg) => ({
-  MessageId: msg.MessageId || msg.id,
-  ReceivedAt: msg.ReceivedAt || new Date().toISOString(),
-  isRead: false,
-  MessageBody: {
-    content: msg.MessageBody?.content || msg.content || "",
-    metadata: msg.MessageBody?.metadata || {
-      type: "NOTIFICATION",
-      version: "1.0",
-    },
-    status: msg.MessageBody?.status || "RECEIVED",
-    timestamp:
-      msg.MessageBody?.timestamp || msg.ReceivedAt || new Date().toISOString(),
-  },
-})
-
-const handleNotificationToggle = (value) => {
-  notificationsEnabled.value = value
-  if (value) {
-    messageSubscription.value = subscribeToMessages((rawMessage) => {
-      if (rawMessage) {
-        const newMessage = transformIncomingMessage(rawMessage)
-        messages.value = [newMessage, ...messages.value].sort(
-          sortMessagesByTimestamp,
-        )
-      }
-    })
-  } else {
-    if (messageSubscription.value) {
-      messageSubscription.value.unsubscribe()
-      messageSubscription.value = null
-    }
-  }
-}
+const { notificationsEnabled, handleNotificationToggle, cleanup } =
+  useNotificationToggle((newMessage) => {
+    messages.value = [newMessage, ...messages.value].sort(
+      sortMessagesByTimestamp,
+    )
+  })
 
 // API keys and endpoints
 const apiKey = import.meta.env.VITE_API_KEY
 const graphqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT
-
-// Helper: Transform fetched messages to standard format
-const transformMessage = (msg) => ({
-  MessageId: msg.MessageId,
-  ReceivedAt: msg.ReceivedAt,
-  isRead: msg.isRead || false,
-  MessageBody: {
-    content: msg?.MessageBody?.content || "",
-    metadata: {
-      type: msg?.MessageBody?.metadata?.type || "NOTIFICATION",
-      version: msg?.MessageBody?.metadata?.version || "1.0",
-    },
-    status: msg?.MessageBody?.status || "UNKNOWN",
-    timestamp: msg?.MessageBody?.timestamp || msg?.ReceivedAt,
-  },
-})
 
 const fetchMessages = async () => {
   try {
@@ -220,9 +175,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  if (messageSubscription.value) {
-    messageSubscription.value.unsubscribe()
-  }
+  cleanup()
 })
 </script>
 
