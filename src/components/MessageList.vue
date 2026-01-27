@@ -57,9 +57,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from "vue"
+import { computed } from "vue"
 import MessageItem from "./MessageItem.vue"
-import { markMessageAsRead } from "@/graphql/subscriptionClient.js"
+import { useMessageDialog } from "@/utils/useMessageDialog"
+import { useInfiniteScroll } from "@/utils/useInfiniteScroll"
+import { useDateFormatter } from "@/utils/useDateFormatter"
 
 const props = defineProps({
   messages: { type: Array, required: true },
@@ -67,13 +69,9 @@ const props = defineProps({
   fetchMoreMessages: { type: Function, required: true },
 })
 
-const sentinel = ref(null)
-const intersectionObserver = ref(null)
-const loadingMore = ref(false)
-
-// Dialog and selection state
-const isDialogOpen = ref(false)
-const selectedMessage = ref(null)
+const { sentinel, loadingMore } = useInfiniteScroll(props.fetchMoreMessages)
+const { isDialogOpen, selectedMessage, openMessage } = useMessageDialog()
+const { formatFullDate } = useDateFormatter()
 
 const sortedMessages = computed(() => {
   return [...props.messages].sort((a, b) => {
@@ -81,62 +79,6 @@ const sortedMessages = computed(() => {
     const dateB = new Date(b.ReceivedAt || 0).getTime()
     return dateB - dateA
   })
-})
-
-const openMessage = async (message) => {
-  if (!message) return
-
-  selectedMessage.value = message
-  isDialogOpen.value = true
-
-  // Mark as read if necessary
-  if (!message.isRead) {
-    try {
-      markMessageAsRead(message)
-      message.isRead = true
-    } catch (error) {
-      console.error("Error marking message as read:", error)
-    }
-  }
-}
-
-const formatFullDate = (timestamp) => {
-  if (!timestamp) return ""
-  try {
-    return new Date(timestamp).toLocaleString()
-  } catch (e) {
-    return "Invalid date"
-  }
-}
-
-const handleIntersection = async (entries) => {
-  const [entry] = entries
-  if (entry.isIntersecting && !loadingMore.value) {
-    try {
-      loadingMore.value = true
-      await props.fetchMoreMessages()
-    } catch (error) {
-      console.error("Error fetching more messages:", error)
-    } finally {
-      loadingMore.value = false
-    }
-  }
-}
-
-onMounted(() => {
-  if (sentinel.value) {
-    intersectionObserver.value = new IntersectionObserver(handleIntersection, {
-      root: null,
-      threshold: 1.0,
-    })
-    intersectionObserver.value.observe(sentinel.value)
-  }
-})
-
-onUnmounted(() => {
-  if (intersectionObserver.value) {
-    intersectionObserver.value.disconnect()
-  }
 })
 </script>
 
