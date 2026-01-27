@@ -12,7 +12,7 @@
               color="error"
             >
               <v-icon class="material-symbols-outlined">{{
-                unreadCount > 0 ? "notifications_unread" : "notifications"
+                getNotificationIcon(unreadCount)
               }}</v-icon>
             </v-badge>
           </v-btn>
@@ -93,55 +93,37 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import MessageApp from "./components/MessageApp.vue"
 import MessageList from "./components/MessageList.vue"
 import "@aws-amplify/ui-vue/styles.css"
 import { Authenticator } from "@aws-amplify/ui-vue"
 import { useNotificationToggle } from "./utils/useNotificationToggle"
-import { fetchMessagesFromAPI } from "./utils/messageApi"
 import { usePanelToggle } from "./utils/usePanelToggle"
-import { calculateUnreadCount } from "./utils/messageHelpers"
+import { useMessages } from "./utils/useMessages"
+import { useAppInitialization } from "./utils/useAppInitialization"
+import { getNotificationIcon } from "./utils/iconHelpers"
 
-const messages = ref([])
-const loading = ref(true)
-const unreadCount = computed(() => calculateUnreadCount(messages.value))
+const {
+  messages,
+  loading,
+  unreadCount,
+  fetchMessages,
+  addMessage,
+  fetchMoreMessages,
+} = useMessages()
 
 const { isMessageListOpen, isSettingsOpen, toggleMessages, toggleSettings } =
   usePanelToggle()
 
 const { notificationsEnabled, handleNotificationToggle, cleanup } =
-  useNotificationToggle((newMessage) => {
-    messages.value = [newMessage, ...messages.value]
-  })
+  useNotificationToggle(addMessage)
 
-const fetchMessages = async () => {
-  try {
-    loading.value = true
-    messages.value = await fetchMessagesFromAPI()
-  } catch (error) {
-    console.error("Error fetching messages:", error)
-    messages.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-const fetchMoreMessages = async () => {
-  // Placeholder function
-}
-
-onMounted(() => {
-  document.title = "Notifications"
-  fetchMessages()
-  if (notificationsEnabled.value) {
-    handleNotificationToggle(true)
-  }
-})
-
-onBeforeUnmount(() => {
-  cleanup()
-})
+useAppInitialization(
+  fetchMessages,
+  notificationsEnabled,
+  handleNotificationToggle,
+  cleanup,
+)
 </script>
 
 <style>

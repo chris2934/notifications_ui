@@ -24,6 +24,8 @@
 </template>
 
 <script setup>
+import { useDateFormatter } from "@/utils/useDateFormatter"
+
 const props = defineProps({
   message: {
     type: Object,
@@ -31,15 +33,7 @@ const props = defineProps({
   },
 })
 
-const formatTime = (timestamp) => {
-  if (!timestamp) return "No time"
-  try {
-    return new Date(timestamp).toLocaleTimeString()
-  } catch (error) {
-    console.error("Error formatting time:", error)
-    return "Invalid time"
-  }
-}
+const { formatTime } = useDateFormatter()
 </script>
 
 <style scoped>
