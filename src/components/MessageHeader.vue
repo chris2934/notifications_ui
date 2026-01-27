@@ -150,21 +150,23 @@ const messageSubscription = ref(null)
 const unreadCount = computed(
   () => props.messages.filter((message) => !message.isRead).length,
 )
-const transformIncomingMessage = (msg) => ({
-  MessageId: msg.MessageId || msg.id,
-  ReceivedAt: msg.ReceivedAt || new Date().toISOString(),
-  isRead: false,
-  MessageBody: {
-    content: msg.MessageBody?.content || msg.content || "",
-    metadata: msg.MessageBody?.metadata || {
-      type: "NOTIFICATION",
-      version: "1.0",
+const transformIncomingMessage = (msg) => {
+  const now = new Date().toISOString()
+  return {
+    MessageId: msg.MessageId ?? msg.id,
+    ReceivedAt: msg.ReceivedAt ?? now,
+    isRead: false,
+    MessageBody: {
+      content: msg.MessageBody?.content ?? msg.content ?? "",
+      metadata: msg.MessageBody?.metadata ?? {
+        type: "NOTIFICATION",
+        version: "1.0",
+      },
+      status: msg.MessageBody?.status ?? "RECEIVED",
+      timestamp: msg.MessageBody?.timestamp ?? msg.ReceivedAt ?? now,
     },
-    status: msg.MessageBody?.status || "RECEIVED",
-    timestamp:
-      msg.MessageBody?.timestamp || msg.ReceivedAt || new Date().toISOString(),
-  },
-})
+  }
+}
 
 const handleNotificationToggle = (value) => {
   notificationsEnabled.value = value
@@ -178,32 +180,28 @@ const handleNotificationToggle = (value) => {
       }
     })
   } else {
-    if (messageSubscription.value) {
-      messageSubscription.value.unsubscribe()
-      messageSubscription.value = null
-    }
+    messageSubscription.value?.unsubscribe()
+    messageSubscription.value = null
   }
 }
 
 const toggleMessages = (event) => {
   event.stopPropagation()
   isMessageListOpen.value = !isMessageListOpen.value
-  if (isMessageListOpen.value) {
-    isSettingsOpen.value = false
-  }
+  isMessageListOpen.value && (isSettingsOpen.value = false)
 }
 
 const toggleSettings = (event) => {
   event.stopPropagation()
   isSettingsOpen.value = !isSettingsOpen.value
-  if (isSettingsOpen.value) {
-    isMessageListOpen.value = false
-  }
+  isSettingsOpen.value && (isMessageListOpen.value = false)
 }
 
 const handleMarkAsRead = (clickedMessage) => {
   const message = props.messages.find((msg) => msg.id === clickedMessage.id)
-  if (message) message.isRead = true
+  if (message) {
+    emit("mark-message-read", clickedMessage.id)
+  }
 }
 
 const fetchMoreMessages = async () => {
