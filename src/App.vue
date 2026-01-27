@@ -71,9 +71,7 @@
                         >notifications</v-icon
                       >
                     </template>
-                    <v-list-item-title
-                      >Real-time Notifications</v-list-item-title
-                    >
+                    <v-list-item-title>Toggle On/Off</v-list-item-title>
                     <template v-slot:append>
                       <v-switch
                         v-model="notificationsEnabled"
