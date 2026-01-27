@@ -7,3 +7,6 @@ export const sortMessagesByTimestamp = (messages) => {
       new Date(b.MessageBody.timestamp) - new Date(a.MessageBody.timestamp),
   )
 }
+
+export const calculateUnreadCount = (messages) => 
+  messages.filter(m => !m.isRead).length

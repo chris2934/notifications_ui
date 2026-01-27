@@ -94,56 +94,31 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue"
-import axios from "axios"
 import MessageApp from "./components/MessageApp.vue"
 import MessageList from "./components/MessageList.vue"
 import "@aws-amplify/ui-vue/styles.css"
 import { Authenticator } from "@aws-amplify/ui-vue"
-import { GET_MESSAGES } from "./graphql/queries"
-import { sortMessagesByTimestamp } from "./utils/messageHelpers"
 import { useNotificationToggle } from "./utils/useNotificationToggle"
-import { transformMessage } from "./utils/transformMessage"
+import { fetchMessagesFromAPI } from "./utils/messageApi"
+import { usePanelToggle } from "./utils/usePanelToggle"
+import { calculateUnreadCount } from "./utils/messageHelpers"
 
-const isMessageListOpen = ref(false)
-const isSettingsOpen = ref(false)
 const messages = ref([])
 const loading = ref(true)
-const unreadCount = computed(
-  () => messages.value.filter((m) => !m.isRead).length,
-)
+const unreadCount = computed(() => calculateUnreadCount(messages.value))
+
+const { isMessageListOpen, isSettingsOpen, toggleMessages, toggleSettings } =
+  usePanelToggle()
 
 const { notificationsEnabled, handleNotificationToggle, cleanup } =
   useNotificationToggle((newMessage) => {
-    messages.value = [newMessage, ...messages.value].sort(
-      sortMessagesByTimestamp,
-    )
+    messages.value = [newMessage, ...messages.value]
   })
-
-// API keys and endpoints
-const apiKey = import.meta.env.VITE_API_KEY
-const graphqlEndpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT
 
 const fetchMessages = async () => {
   try {
     loading.value = true
-    const response = await axios.post(
-      graphqlEndpoint,
-      { query: GET_MESSAGES },
-      {
-        headers: {
-          "x-api-key": apiKey,
-          "Content-Type": "application/json",
-        },
-      },
-    )
-    const fetchedMessages = Array.isArray(response?.data?.data?.getMessages)
-      ? response.data.data.getMessages
-      : []
-
-    messages.value = fetchedMessages
-      .filter((msg) => msg?.MessageId && msg?.ReceivedAt && msg?.MessageBody)
-      .map(transformMessage)
-      .sort(sortMessagesByTimestamp)
+    messages.value = await fetchMessagesFromAPI()
   } catch (error) {
     console.error("Error fetching messages:", error)
     messages.value = []
@@ -154,16 +129,6 @@ const fetchMessages = async () => {
 
 const fetchMoreMessages = async () => {
   // Placeholder function
-}
-
-const toggleMessages = () => {
-  isMessageListOpen.value = !isMessageListOpen.value
-  if (isMessageListOpen.value) isSettingsOpen.value = false
-}
-
-const toggleSettings = () => {
-  isSettingsOpen.value = !isSettingsOpen.value
-  if (isSettingsOpen.value) isMessageListOpen.value = false
 }
 
 onMounted(() => {
