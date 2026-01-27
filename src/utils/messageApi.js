@@ -1,7 +1,7 @@
 import axios from "axios"
 import { GET_MESSAGES } from "../graphql/queries"
 import { sortMessagesByTimestamp } from "./messageHelpers"
-import { transformIncomingMessage } from "./messageTransformer"
+import { transformIncomingMessage, isValidMessage } from "./messageTransformer"
 
 export const fetchMessagesFromAPI = async () => {
   const apiKey = import.meta.env.VITE_API_KEY
@@ -23,7 +23,7 @@ export const fetchMessagesFromAPI = async () => {
     : []
 
   return fetchedMessages
-    .filter((msg) => msg?.MessageId && msg?.ReceivedAt && msg?.MessageBody)
+    .filter(isValidMessage)
     .map(transformIncomingMessage)
     .sort(sortMessagesByTimestamp)
 }

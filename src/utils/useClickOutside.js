@@ -7,6 +7,6 @@ export function useClickOutside(callback) {
       callback()
     }
   }
-  
+
   return { handleClickOutside }
 }
