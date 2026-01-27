@@ -1,15 +1,20 @@
 {
   "dev": {
     "awscloudformation": {
-      "AuthRoleName": "amplify-notificationsui-dev-a1bcd-authRole",
-      "UnauthRoleArn": "arn:aws:iam::752925592607:role/amplify-notificationsui-dev-a1bcd-unauthRole",
-      "AuthRoleArn": "arn:aws:iam::752925592607:role/amplify-notificationsui-dev-a1bcd-authRole",
+      "AuthRoleName": "amplify-notificationsui-dev-164c5-authRole",
+      "UnauthRoleArn": "arn:aws:iam::752925592607:role/amplify-notificationsui-dev-164c5-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::752925592607:role/amplify-notificationsui-dev-164c5-authRole",
       "Region": "us-east-1",
-      "DeploymentBucketName": "amplify-notificationsui-dev-a1bcd-deployment",
-      "UnauthRoleName": "amplify-notificationsui-dev-a1bcd-unauthRole",
-      "StackName": "amplify-notificationsui-dev-a1bcd",
-      "StackId": "arn:aws:cloudformation:us-east-1:752925592607:stack/amplify-notificationsui-dev-a1bcd/8bb744c0-0be7-11f0-8dae-12436fff85ab",
-      "AmplifyAppId": "djebft1ocwr5e"
+      "DeploymentBucketName": "amplify-notificationsui-dev-164c5-deployment",
+      "UnauthRoleName": "amplify-notificationsui-dev-164c5-unauthRole",
+      "StackName": "amplify-notificationsui-dev-164c5",
+      "StackId": "arn:aws:cloudformation:us-east-1:752925592607:stack/amplify-notificationsui-dev-164c5/d9425fb0-fb95-11f0-b9f7-0afff684d6fd",
+      "AmplifyAppId": "d2y8lkmsh285y1"
+    },
+    "categories": {
+      "hosting": {
+        "S3AndCloudFront": {}
+      }
     }
   }
 }
