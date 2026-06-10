@@ -13,16 +13,12 @@ import {
 } from "@/graphql/queries.js"
 
 // Environment configuration (do not hardcode secrets)
-const url = import.meta.env.VITE_GRAPHQL_ENDPOINT // e.g., https://xxxxx.appsync-api.<region>.amazonaws.com/graphql
+const url = import.meta.env.VITE_GRAPHQL_ENDPOINT
 const region =
   import.meta.env.VITE_APPSYNC_REGION || import.meta.env.VITE_AWS_REGION
 const apiKey = import.meta.env.VITE_API_KEY
 
 if (!url || !region || !apiKey) {
-  // Log once to help diagnose misconfiguration during local dev
-  // Ensure VITE_GRAPHQL_ENDPOINT, VITE_APPSYNC_REGION (or VITE_AWS_REGION), and VITE_API_KEY are set
-  // Remember to restart the dev server after editing .env
-
   console.warn("Missing AppSync env config. Check VITE_* variables in .env.")
 }
 
@@ -35,7 +31,7 @@ const auth = {
   apiKey,
 }
 
-// Chain: auth link -> subscription handshake link (handles both HTTP and WS)
+// Chain: auth link -> subscription handshake link
 const link = ApolloLink.from([
   createAuthLink({ url, region, auth }),
   createSubscriptionHandshakeLink({ url, region, auth }, httpLink),
@@ -59,8 +55,12 @@ export default function subscribeToMessages(callback) {
     .subscribe({
       next: (data) => {
         console.log("Subscription payload received:", data)
+
         const newMessage = data?.data?.onNewMessage
-        if (newMessage) callback(newMessage)
+
+        if (newMessage) {
+          callback(newMessage)
+        }
       },
       error: (err) => {
         console.error("Subscription error:", err)
@@ -96,12 +96,10 @@ export function markMessageAsRead(message) {
       },
     })
     .then((result) => {
-      const success = result?.data?.updateMessage?.success
-      if (success) {
-        console.log(
-          "Message successfully marked as read:",
-          result.data.updateMessage,
-        )
+      const updatedMessage = result?.data?.updateMessage
+
+      if (updatedMessage) {
+        console.log("Message successfully marked as read:", updatedMessage)
       } else {
         console.error(
           "Failed to mark message as read. Server returned an error:",
@@ -110,11 +108,16 @@ export function markMessageAsRead(message) {
       }
     })
     .catch((error) => {
-      if (error.graphQLErrors)
+      if (error.graphQLErrors) {
         console.error("GraphQL Errors:", error.graphQLErrors)
-      if (error.networkError)
+      }
+
+      if (error.networkError) {
         console.error("Network Error:", error.networkError)
-      if (!error.graphQLErrors && !error.networkError)
+      }
+
+      if (!error.graphQLErrors && !error.networkError) {
         console.error("Failed to mark message as read:", error)
+      }
     })
 }

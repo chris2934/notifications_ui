@@ -1,0 +1,35 @@
+meta {
+  name: Get Messages
+  type: graphql
+  seq: 2
+}
+
+post {
+  url: {{url}}
+  body: graphql
+  auth: none
+}
+
+headers {
+  x-api-key: {{api_key}}
+  Content-Type: application/json
+}
+
+body:graphql {
+  query GetMessages {
+    getMessages {
+      MessageId
+      ReceivedAt
+      isRead
+      MessageBody {
+        content
+        metadata {
+          type
+          version
+        }
+        status
+        timestamp
+      }
+    }
+  }
+}
