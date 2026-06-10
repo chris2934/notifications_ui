@@ -1,0 +1,61 @@
+meta {
+  name: Send Notification
+  type: graphql
+  seq: 1
+}
+
+post {
+  url: {{url}}
+  body: graphql
+  auth: none
+}
+
+headers {
+  x-api-key: da2-fuol6u2izngmtgx3bnepnci7xu
+  Content-Type: application/json
+}
+
+body:graphql {
+  mutation CreateMessage($input: CreateMessageInput!) {
+    addMessage(input: $input) {
+      MessageId
+      ReceivedAt
+      isRead
+      recipientEmail
+      MessageBody {
+        content
+        metadata {
+          type
+          version
+        }
+        status
+        timestamp
+      }
+    }
+  }
+  
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "recipientEmail": "chris1.higginbotham@geaerospace.com",
+      "ReceivedAt": "{{current_time}}",
+      "isRead": false,
+      "MessageBody": {
+        "content": "Hello from Bruno Again!",
+        "status": "SENT",
+        "timestamp": "{{current_time}}",
+        "metadata": {
+          "type": "NOTIFICATION",
+          "version": "1.0"
+        }
+      }
+    }
+  }
+}
+
+script:pre-request {
+  const now = new Date().toISOString();
+  bru.setVar("current_time", now);
+}
