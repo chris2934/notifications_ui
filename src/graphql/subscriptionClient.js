@@ -11,6 +11,7 @@ import {
   MESSAGE_SUBSCRIPTION,
   UPDATE_MESSAGE_READ_STATUS,
 } from "@/graphql/queries.js"
+import gql from "graphql-tag"
 
 // Environment configuration (do not hardcode secrets)
 const url = import.meta.env.VITE_GRAPHQL_ENDPOINT
@@ -50,7 +51,7 @@ export default function subscribeToMessages(callback) {
 
   const sub = client
     .subscribe({
-      query: MESSAGE_SUBSCRIPTION,
+      query: gql(MESSAGE_SUBSCRIPTION),
     })
     .subscribe({
       next: (data) => {
