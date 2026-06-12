@@ -22,6 +22,7 @@ body:graphql {
       ReceivedAt
       isRead
       recipientEmail
+      model
       MessageBody {
         content
         metadata {
@@ -41,6 +42,7 @@ body:graphql:vars {
     "input": {
       "recipientEmail": "chris1.higginbotham@geaerospace.com",
       "ReceivedAt": "{{messageTimestamp}}",
+      "model": "{{randomModel}}",
       "isRead": false,
       "MessageBody": {
         "content": "{{randomMessage}}",
@@ -66,8 +68,16 @@ script:pre-request {
     "You have a new update.",
   ]
   
+  const models = [
+    "Model X",
+    "Model Y",
+    "Model Z",
+  ]
+  
   const randomMessage = messages[Math.floor(Math.random() * messages.length)]
+  const randomModel = models[Math.floor(Math.random() * models.length)]
   
   bru.setVar("randomMessage", randomMessage)
   bru.setVar("messageTimestamp", new Date().toISOString())
+  bru.setVar("randomModel", randomModel)
 }

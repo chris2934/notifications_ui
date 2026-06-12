@@ -10,6 +10,17 @@
         </div>
         <div class="message-meta">
           <v-chip
+            v-if="message.model"
+            class="pa-0 mr-2"
+            color="medium-emphasis"
+            size="x-small"
+            variant="text"
+          >
+            {{ message.model }}
+          </v-chip>
+        </div>
+        <div class="message-meta">
+          <v-chip
             class="pa-0"
             color="medium-emphasis"
             size="x-small"

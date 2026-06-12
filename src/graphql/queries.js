@@ -5,6 +5,7 @@ export const GET_MESSAGES = `
       ReceivedAt
       isRead
       recipientEmail
+      model
       MessageBody {
         content
         metadata {
@@ -25,6 +26,7 @@ export const MESSAGE_SUBSCRIPTION = `
       ReceivedAt
       isRead
       recipientEmail
+      model
       MessageBody {
         content
         metadata {
@@ -45,6 +47,7 @@ export const UPDATE_MESSAGE_READ_STATUS = `
       ReceivedAt
       isRead
       recipientEmail
+      model
       MessageBody {
         content
         metadata {
